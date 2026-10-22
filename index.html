@@ -21,6 +21,9 @@ main{padding:18px 26px;max-width:980px}
 .step{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;background:#0006;border-radius:8px;padding:8px 10px;margin:8px 0;line-height:1.7}
 .rules{font-family:ui-monospace,Menlo,monospace;background:#0006;border-radius:8px;padding:6px 10px;margin:6px 0;display:inline-block;line-height:1.7}
 svg.fa{color:#cfd3ff;display:block;margin:8px 0;max-width:100%;height:auto}svg.fa .st{fill:#1f2340;stroke:currentColor}svg.fa text{fill:currentColor;font:13px system-ui}
+.tq{background:#0004;border:1px solid #2e2e40;border-radius:10px;padding:10px 13px;margin:9px 0}.ask{font-size:15px}
+.ans{margin-top:8px;padding:8px 10px;border-left:3px solid var(--ok);background:#13261d;border-radius:6px;font-size:14.5px;line-height:1.75}
+.tip{margin-top:7px;color:#ffe3a3;font-size:13.5px}.ans code,.card code{font-family:ui-monospace,Menlo,monospace;background:#0006;padding:0 4px;border-radius:4px}
 .ws{background:#0004;border:1px solid #2e2e40;border-radius:10px;padding:9px 12px;margin:8px 0}.wl{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7}
 .tag{font:600 11px system-ui;color:#fff;background:var(--a);border-radius:6px;padding:1px 6px;margin-right:4px}.why{color:#c9c9dc;font-size:13.5px;margin-top:6px;padding-top:6px;border-top:1px dashed #33334a}
 .lvl{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;background:#2c2c40;color:var(--y);margin-right:6px}
@@ -39,41 +42,84 @@ ul{margin:6px 0;padding-left:20px}li{margin:3px 0}h2{margin:0 0 8px;font-size:20
 <div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
 <script src="core.js"></script>
 <script>
-// ───────────── refresher cards (from the Week 3–4 filled notes + ICA solutions) ─────────────
+// ───────────── refresher = tutor walkthroughs. Each example is HARDER than the test on purpose.
+// step: {ask: tutor's question (think first), a: the answer / what to write, tip: trick}
+const X=(ask,a,tip)=>({ask,a,tip});
+const N_UNION={states:{q0:[60,145],q1:[180,80],q2:[310,80],q3:[180,210],q4:[310,210],q5:[440,210]},start:'q0',accept:['q2','q5'],edges:[['q0','q1','ε'],['q1','q1','0'],['q1','q2','1'],['q0','q3','ε'],['q3','q4','1'],['q4','q5','0'],['q5','q4','1']]};
+const DFA_MOD3={states:{q1:[60,120],q2:[240,120],q3:[150,240]},start:'q1',accept:['q1'],edges:[['q1','q1','0'],['q1','q2','1'],['q2','q2','0'],['q2','q3','1'],['q3','q3','0'],['q3','q1','1']]};
 const LEARN={
-regex:{sum:`<ul><li>Regular operations: <b>∪</b> union, <b>∘</b> concat (often omitted), <b>*</b> Kleene star (0 or more).</li>
-<li><b>Precedence “PKCU” (Pikachu order)</b>: Parentheses → star → concat → union. <code>01*∪1 = (0(1*)) ∪ 1</code>.</li>
-<li><b>ε vs ∅</b>: ε = "" (one empty string), ∅ = {} (no strings). R∪∅ = R, R∘ε = R, R∘∅ = ∅, ∅* = ε, 0∪ε = {0,ε}.</li>
-<li>Shorthand: a⁺ = aa* = a*a · aⁿ = n copies · Σ = 0∪1 (as regex) · Σ* = all strings.</li>
-<li>Identities: (u∪v)* = (u*∪v)* = (u*v*)* = u*(vu*)* = (u*v)*u* · (uv)*u = u(vu)* · u(v∪w) = uv∪uw.</li></ul>`,
- ex:{q:'Identify L for (01)* and 0*1 (Exercise 3.1)',steps:['(01)* = {ε, 01, 0101, 010101, …} = {w | w is any number of 01’s concatenated}.','Note ε is in it — star allows zero copies.','0*1 = {1, 01, 001, 0001, …} = {w | any number of 0s followed by a single 1}.','Check edge cases first: ε, single symbols, the shortest member.']}},
-nfa:{sum:`<ul><li>DFA ⟷ NFA ⟷ regex ⟷ English/set-builder all describe the same languages (regular).</li>
-<li><b>Regex → diagram</b>: build piece by piece. Symbol a: two states, arrow a. Concat: chain the pieces. Union: new start with ε-arrows into each piece. Star: loop back to the piece’s start and make it accepting (so ε is accepted). a⁺: loop, but the start is NOT accepting.</li>
-<li><b>Diagram → regex</b> (ICA-3): annotate each section, list every path that ends in an accept state, write a regex per path, union them. 0 then loop 0 = 0⁺.</li>
-<li>Always test: does it accept ε? the shortest strings? reject a near-miss?</li></ul>`,
- ex:{q:'Sample Q1: Make a state diagram for L = (01)* ∪ 1',steps:['PKCU: two pieces joined by ∪ — (01)* and 1.','(01)*: state q1 (accepting, so ε works) →0→ q2 →1→ back to q1.','1: state q3 →1→ q4 (accepting).','Union: new start q0 with ε-arrows to q1 and q3.','Result:'+drawFA(NFAS.find(e=>e.re==='(01)*∪1').nfa),'Check: ε ✓ (q0→ε→q1), 01 ✓, 0101 ✓, 1 ✓, 0 ✗, 11 ✗.']}},
-formal:{sum:`<ul><li>R is regular if R is: <b>1.</b> a for some a ∈ Σ · <b>2.</b> ε · <b>3.</b> ∅ (base cases) · <b>4.</b> R₁∪R₂ · <b>5.</b> R₁∘R₂ · <b>6.</b> R₁* (recursive cases).</li>
-<li>Proof shape: <b>“Let R<sub>X</sub> denote ‘X is regular’.”</b> → base cases → build up inside-out in PKCU order → “∴ R<sub>L</sub>”.</li>
-<li>Each line: premises ∴ conclusion. Union/concat need <b>both</b> parts already shown.</li>
-<li>a⁺ takes 2 steps (a* by 6, then a∘a* by 5). Σ = 0∪1 is a union step.</li></ul>`,
- ex:{q:'Sample Q3: Show that 10 ∪ (ε*00)* is a regular expression',steps:proofSteps('10∪(ε*00)*',B01).steps.map(s=>S_(s.text,s.why))}},
-pump:{sum:`<ul><li><b>P.L.R.L.</b>: if A is regular, ∃p such that every s ∈ A with |s| ≥ p splits s = xyz with (1) xyⁱz ∈ A ∀i ≥ 0, (2) |y| > 0, (3) |xy| ≤ p.</li>
-<li>Use the contrapositive: “A can’t be pumped ⇒ A is not regular”. Proof by contradiction.</li>
-<li><b>Template</b>: ① Assume L regular → P.L.R.L. applies. ② Pick s in terms of p, show s ∈ L and |s| ≥ p. ③ Use |xy| ≤ p to pin down y (ideally one case). ④ Pump (i = 0 or 2) → string ∉ L → contradiction → L not regular.</li>
-<li>Pick s so its first p symbols are all the same (0ᵖ1ᵖ): then y = 0ᵏ, one case. If L has a prefix (110ⁿ⁻²1ⁿ), do cases.</li>
-<li>xy⁰z = xz (“pump down”). For {0ⁿ1ᵐ | n > m} you MUST pump down.</li></ul>`,
- ex:{q:'Sample Q2: Prove L = {3ⁿ⁺¹2²1ⁿ | n ≥ 0} is non-regular',steps:pumpProof(PUMP.find(f=>f.sample))}},
-cfg:{sum:`<ul><li>CFG G = (V, Σ, R, S): V variables, Σ terminals, V ∩ Σ = ∅, R rules (single variable → string of V ∪ Σ), S ∈ V start. Course writes ε in Σ.</li>
-<li>Context-free = left side is ONE variable (no xxAy → …, no AB → …). “|” = or.</li>
-<li>Derivation: replace variables step by step (⇒). Parse tree: read leaves left → right. L(G) = {w ∈ Σ* | S ⇒* w}.</li>
-<li><b>Design patterns</b>: counts that depend on each other → nest: A → uAw | middle. Independent blocks → S → ABC with A → 1A | ε. Union → S → A | B. Concat → S → AB. “Anything” → A → 0A | 1A | ε.</li>
-<li><b>Length trick (sample 4b)</b>: |w| as a formula in n; set equal to the target; n must be an integer ≥ the minimum, otherwise impossible.</li></ul>`,
- ex:{q:'Sample Q4: CFG for L = {c<sup>n−1</sup>a³b<sup>n+1</sup> | n ≥ 1}; derivation with |w| = 9 or prove impossible',steps:cfgSteps(SAMPLE_FAM,9)}},
-dfa2cfg:{sum:`<ul><li>① A variable Rᵢ for each state qᵢ.</li><li>② Start variable S = R of the DFA’s start state.</li>
-<li>③ For each transition δ(qᵢ, a) = qⱼ add Rᵢ → aRⱼ; for each accept state add Rᵢ → ε.</li>
-<li>Deriving w takes |w| + 1 steps; each line = symbols read so far + the current state’s variable.</li>
-<li>Shortcut (not the conversion, but valid): write L(M) as a regex and build a grammar from it (Σ*101Σ* → S → A101A, A → 0A | 1A | ε).</li></ul>`,
- ex:{q:'Convert DFA M₂ (strings containing 101) into a CFG and derive 0011010',steps:[S_(drawFA(DFA_M2),'L(M₂) = {w | w contains 101}. Read off every arrow — you will turn each one into a rule.'),...d2cSteps(DFA_M2,'0011010')]}},
+regex:{tricks:`<ul><li><b>Pikachu order (PKCU)</b>: Parentheses → Kleene star → Concat → Union. Star only grabs the ONE thing to its left: <code>01*</code> is 0 then 1s, not (01)*.</li>
+<li><b>ε vs ∅ in one breath</b>: ε is a string (length 0), ∅ is a set with nothing in it. <code>R∘ε = R</code> but <code>R∘∅ = ∅</code> — ∅ “kills” concatenation like × 0.</li>
+<li><b>Edge-case sweep</b>: before answering ANY regex question, test ε, 0, 1, and one “almost” string. Most wrong options die here.</li>
+<li><b>Translate, don’t stare</b>: say the regex out loud in English (“any 0s, then a 1…”).</li>
+<li><b>Σ trick</b>: Σ* = “anything”, so <code>Σ*X Σ*</code> = “contains X”, <code>Σ*X</code> = “ends with X”, <code>XΣ*</code> = “starts with X”.</li></ul>`,
+ ex:{q:'Harder than the test: write a regex for {w ∈ {0,1}* | w has no two 1s in a row}',steps:[
+  X('Before writing anything — what strings are IN and OUT? List a few.','IN: ε, 0, 1, 10, 01, 0101, 1001. OUT: 11, 0110, 111.','Always start with examples. They become your test cases at the end.'),
+  X('Think of each 1 as a “danger”. What must come right after a 1 (unless it’s the last symbol)?','A 0. So every 1 is really a little “10” block — except possibly a final 1.','Turn a “never X” rule into “every risky symbol comes paired with a safe follower.”'),
+  X('So what building blocks can the string be made of, repeated any number of times?','Blocks 0 and 10, in any order and any amount: <code>(0 ∪ 10)*</code>','“Any order, any amount” of some blocks = (block₁ ∪ block₂)*.'),
+  X('(0 ∪ 10)* can’t end in 1. How do you allow one optional 1 at the end?','Concatenate an optional 1: <code>(ε ∪ 1)</code>. Answer: <b><code>(0 ∪ 10)*(ε ∪ 1)</code></b>','“Optional X” = (ε ∪ X). That’s the ? from Table 2.2.'),
+  X('Test it on your list. Does it accept 1? 1001? Reject 0110?','1 = ε-blocks then the optional 1 ✓. 1001 = 10·0·(1) ✓. 0110: after 0 and then 1, the next must be 0 — it’s 1 ✗ rejected ✓.','A regex isn’t done until it passed your edge cases.')]}},
+nfa:{tricks:`<ul><li><b>Read the diagram’s “tells”</b>: loop on a state = star; arrow then loop = plus (at least one); ε-arrows out of a fresh start = union.</li>
+<li><b>Star vs plus at the start</b>: for a*, the state you start in must accept (zero a’s is fine). For a⁺, it must NOT.</li>
+<li><b>Union = new start + ε-arrows</b>. Never glue two machines by merging their start states — loops leak between them.</li>
+<li><b>Diagram → regex</b>: list every path that ends in an accept state, one regex per path, then ∪ them. Factor out common endings (uw ∪ vw = (u ∪ v)w).</li>
+<li><b>Mark it</b>: start arrow + double circles are graded. Trace ε and two short strings before you hand it in.</li></ul>`,
+ ex:{q:'Harder than the test: make a state diagram for L = 0*1 ∪ (10)⁺',steps:[
+  X('Lowest-priority operator first: what are the two big pieces?','∪ splits it: piece A = <code>0*1</code>, piece B = <code>(10)⁺</code>. Build each separately.','Find the operator that’s applied LAST (lowest in PKCU) — that’s how the machine splits.'),
+  X('Piece A, 0*1: what does the machine look like?','State q1 loops on 0 (any number of 0s), then a 1-arrow to q2 (accept).','Star on a single symbol = self-loop.'),
+  X('Piece B, (10)⁺: one or more copies of “10”. Where do you put the accept state and the loop?','q3 →1→ q4 →0→ q5 (accept), then a 1-arrow from q5 back to q4 to repeat “10”.','Plus = do it once for real, THEN loop. If you made q3 accepting you’d accept ε — wrong for ⁺.'),
+  X('How do you join A and B with ∪?','New start q0 with ε-arrows to q1 and q3:'+drawFA(N_UNION),'Union = fresh start + ε to each piece’s start.'),
+  X('Trace: does it accept ε? 1? 1010? 101?','ε ✗ (no accept state reachable without reading) ✓. 1 ✓ via A. 1010 ✓ via B. 101 ✗ — B needs to end on 0, A needs 0s before a single 1 ✓.','If ε is wrongly accepted, you probably made a start state accepting.')]}},
+formal:{tricks:`<ul><li><b>Plan top-down, write bottom-up</b>: split at the LAST operator (∪ first, then ∘, then *) to see the tree; then write the proof from the leaves up.</li>
+<li><b>Every line = “premises ∴ new thing”</b>. ∪ and ∘ need TWO premises; * needs one.</li>
+<li><b>⁺ costs 2 lines</b>: a* (rule 6), then a∘a* = a⁺ (rule 5). No “plus rule” exists.</li>
+<li><b>Σ costs a line</b>: R₀, R₁ ∴ R<sub>0∪1</sub> = R<sub>Σ</sub>.</li>
+<li><b>Free marks</b>: first line “Let R<sub>X</sub> denote ‘X is regular’”, last line names the whole expression.</li></ul>`,
+ ex:{q:'Harder than the test: show (0 ∪ ε)*1⁺ ∪ Σ0 is regular (Σ = {0,1})',steps:[
+  X('Plan first. What is the LAST operation applied (the root of the tree)?','The ∪ between <code>(0∪ε)*1⁺</code> and <code>Σ0</code>. Union is lowest priority, so it’s applied last.','Plan top-down: root = lowest-priority operator outside all parentheses.'),
+  X('Keep splitting. What are the leaves (smallest pieces) of the whole tree?','Leaves: 0, ε, 1, Σ, 0. So the base cases are 0, 1 (from Σ) and ε.','Leaves = base cases. Write them first.'),
+  X('Write the opening and base-case lines.','Let R<sub>X</sub> denote “X is regular”.<br>0, 1 ∈ Σ ∴ R<sub>0</sub>, R<sub>1</sub><br>ε is the empty string ∴ R<sub>ε</sub>','One line for all symbols is fine. Don’t forget ε — it hides inside (0 ∪ ε).'),
+  X('Build the left branch (0 ∪ ε)*1⁺ from the inside out. How many lines?','Four:<br>R<sub>0</sub>, R<sub>ε</sub> ∴ R<sub>0∪ε</sub> (4)<br>R<sub>0∪ε</sub> ∴ R<sub>(0∪ε)*</sub> (6)<br>R<sub>1</sub> ∴ R<sub>1*</sub> (6)<br>R<sub>1</sub>, R<sub>1*</sub> ∴ R<sub>11*</sub> = R<sub>1⁺</sub> (5)','The ⁺ trap: two lines, star then concat.'),
+  X('Now join the left branch together. Which rule?','R<sub>(0∪ε)*</sub>, R<sub>1⁺</sub> ∴ R<sub>(0∪ε)*1⁺</sub> (5, concatenation)','Concat glues two already-proven pieces side by side.'),
+  X('Right branch Σ0. What do you have to do before you can use Σ?','R<sub>0</sub>, R<sub>1</sub> ∴ R<sub>0∪1</sub> = R<sub>Σ</sub> (4)<br>R<sub>Σ</sub>, R<sub>0</sub> ∴ R<sub>Σ0</sub> (5)','Σ isn’t a base case — it’s a union of symbols.'),
+  X('Finish at the root.','R<sub>(0∪ε)*1⁺</sub>, R<sub>Σ0</sub> ∴ R<sub>(0∪ε)*1⁺ ∪ Σ0</sub> (4)<br>∴ L is regular by the formal definition. ∎','Count check: one line per operator (⁺ = 2, Σ = 1). 7 recursive lines here — if you have fewer, you skipped one.')]}},
+pump:{tricks:`<ul><li><b>The 4-line skeleton</b> (memorize): Assume regular → pick s with p → |xy| ≤ p pins y → pump, ∉ L, contradiction.</li>
+<li><b>Pick s so the first p symbols are all the same letter</b>. Then |xy| ≤ p forces y = that letter, one case. That’s 90% of the work.</li>
+<li><b>Pick s right at the edge</b> of the rule (e.g. m = n+1, not m = 2n). Tight strings break with the smallest push.</li>
+<li><b>Up or down?</b> If pumping up keeps you in L, pump down (i = 0). Ask: “which direction breaks the inequality?”</li>
+<li><b>Never</b> pick p = 5 or choose the split yourself — the lemma picks p and the split; you only pick s and i.</li></ul>`,
+ ex:{q:'Harder than the test: prove L = {0<sup>n</sup>1<sup>m</sup> | m > n} is non-regular',steps:[
+  X('What’s the rule of L in words, and what’s the plan?','More 1s than 0s. Plan: assume regular, pick s, pump to get “not more 1s than 0s”.','Say the rule in plain words — the contradiction is breaking exactly that rule.'),
+  X('Which s? Tempting: 0<sup>p</sup>1<sup>2p</sup>. Why is that a bad choice?','With y = 0<sup>k</sup>, pumping up gives 0<sup>p+k</sup>1<sup>2p</sup>. Since k ≤ p, p+k ≤ 2p — often STILL more 1s → still in L. No contradiction!','Loose strings survive pumping. Pick s right at the edge of the rule.'),
+  X('So pick the tightest string with more 1s than 0s.','s = 0<sup>p</sup>1<sup>p+1</sup>. s ∈ L (p+1 > p) and |s| = 2p+1 ≥ p.','Edge string: just ONE more 1 than 0s.'),
+  X('Use condition (3), |xy| ≤ p. What must y be?','The first p symbols are all 0s, so y = 0<sup>k</sup> with 1 ≤ k ≤ p (k ≥ 1 by condition 2). One case.','That’s why the 0s go first with exactly p of them.'),
+  X('Pump up or down? Which i breaks “m > n”?','Up! i = 2: xy²z = 0<sup>p+k</sup>1<sup>p+1</sup>. Now #0s = p+k ≥ p+1 = #1s, so NOT more 1s ∉ L.','Adding 0s attacks “more 1s”. (For n > m you’d pump DOWN instead.)'),
+  X('Close the proof.','This contradicts (1) of the P.L.R.L. ∴ L is not regular. ∎','Last two lines are free marks: name the condition, state the conclusion.')]}},
+cfg:{tricks:`<ul><li><b>Linked counts → nest.</b> If two blocks depend on the same n, ONE rule must add to both at once: A → uAw.</li>
+<li><b>Nesting order = outside-in.</b> Whatever pairs with the OUTERMOST letters goes in the outer rule.</li>
+<li><b>Smallest string first.</b> Write n = min, then n+1 — the difference IS the recursive rule; the min is the base.</li>
+<li><b>Independent blocks → separate variables</b>: S → ABC, each A → 1A | ε.</li>
+<li><b>Length questions</b>: add exponents → |w| = (formula in n) → solve. Not a whole number, or below the minimum n → impossible, and the formula is the proof.</li></ul>`,
+ ex:{q:'Harder than the test: CFG for L = {a<sup>i</sup>b<sup>j</sup>c<sup>k</sup> | i = j + k}, then derive |w| = 6 or prove impossible, and same for |w| = 7',steps:[
+  X('Rewrite the condition so you can SEE the matching.','i = j + k means a<sup>j+k</sup>b<sup>j</sup>c<sup>k</sup> = a<sup>k</sup>·a<sup>j</sup>b<sup>j</sup>·c<sup>k</sup>: some a’s match the b’s, the other a’s match the c’s.','Split a shared exponent into pieces — each piece pairs with one block.'),
+  X('Which pair is OUTSIDE: a…c or a…b?','a…c: the c’s are at the far right, so their matching a’s are at the far left. a…b sits in the middle.','Outermost letters = outermost rule.'),
+  X('Write the rules.','S → aSc | B  (outer: wrap a…c, then switch)<br>B → aBb | ε  (inner: wrap a…b, then stop)','One variable per “layer” of nesting. The switch (S → B) lets you stop adding c’s.'),
+  X('Check the smallest strings: ε, ab, ac, aabc?','ε: S⇒B⇒ε ✓. ab: S⇒B⇒aBb⇒ab ✓. ac: S⇒aSc⇒aBc⇒ac ✓. aabc: S⇒aSc⇒aBc⇒aaBbc⇒aabc ✓','Test edge cases where one block is empty.'),
+  X('Full answer with notation.',gHTML({S:'S',R:{S:['aSc','B'],B:['aBb','ε']}}),'4-tuple + ε in Σ = notation marks.'),
+  X('|w| = 6? Find the length formula first.','|w| = i + j + k = (j+k) + j + k = 2(j+k) → always EVEN. 6 = 2·3 ✓, e.g. j=1, k=2: aaabcc.<br>Derivation: '+derivHTML(cfgDerive({S:'S',R:{S:['aSc','B'],B:['aBb','ε']}},'aaabcc')),'Length = formula; pick values that hit the target.'),
+  X('|w| = 7?','Impossible: |w| = 2(j+k) is even for every string in L, and 7 is odd. ∴ no derivation of length 7.','The parity argument IS the proof — write it as a sentence.')]}},
+dfa2cfg:{tricks:`<ul><li><b>Three moves</b>: variable per state · S = start state’s variable · R<sub>i</sub> → aR<sub>j</sub> per arrow, R<sub>i</sub> → ε per accept state.</li>
+<li><b>Go state by state</b>: each state gets exactly one rule line with one alternative per symbol (+ ε if accepting). Count them: 2 symbols → 2 or 3 alternatives.</li>
+<li><b>Start state that accepts</b> ⇒ the grammar derives ε. Don’t forget R<sub>start</sub> → ε.</li>
+<li><b>Derivation = walking the DFA</b>: each line adds one symbol and swaps to the next state’s variable. |w| + 1 lines.</li>
+<li><b>Stuck at a non-accepting variable</b> = the DFA rejects that string — that’s your “can’t be derived” proof.</li></ul>`,
+ ex:{q:'Harder than the test: convert this DFA (number of 1s divisible by 3) to a CFG, derive 10101, and show 0110 can’t be derived',steps:[
+  X('Look at the machine. What does it count?','It moves q1→q2→q3→q1 on each 1 and ignores 0s: it tracks #1s mod 3. Start q1 also accepts.'+drawFA(DFA_MOD3),'Understand the DFA first — you’ll catch mistakes in your rules.'),
+  X('Variables and start variable?','R<sub>1</sub>, R<sub>2</sub>, R<sub>3</sub>; start variable R<sub>1</sub> (q1 is the start).','One variable per state — name them to match the states.'),
+  X('Write R<sub>1</sub>’s rule. Careful — q1 is special.','R<sub>1</sub> → 0R<sub>1</sub> | 1R<sub>2</sub> | ε','q1 accepts, so it gets ε. Since it’s also the start, the grammar can derive ε (zero 1s is divisible by 3).'),
+  X('R<sub>2</sub> and R<sub>3</sub>?','R<sub>2</sub> → 0R<sub>2</sub> | 1R<sub>3</sub><br>R<sub>3</sub> → 0R<sub>3</sub> | 1R<sub>1</sub>','No ε: q2, q3 don’t accept. One alternative per arrow.'),
+  X('Derive 10101.','R<sub>1</sub> ⇒ 1R<sub>2</sub> ⇒ 10R<sub>2</sub> ⇒ 101R<sub>3</sub> ⇒ 1010R<sub>3</sub> ⇒ 10101R<sub>1</sub> ⇒ 10101','5 symbols → 6 lines. You end on R<sub>1</sub>, which has ε — that’s the DFA accepting.'),
+  X('Why can’t 0110 be derived?','R<sub>1</sub> ⇒ 0R<sub>1</sub> ⇒ 01R<sub>2</sub> ⇒ 011R<sub>3</sub> ⇒ 0110R<sub>3</sub> — R<sub>3</sub> has no ε rule, so the derivation can’t finish.','Every rule forces the next symbol’s path, so there’s only one route — if it gets stuck, the string isn’t in L(G).')]}},
 };
 
 // ───────────── state ─────────────
@@ -105,12 +151,14 @@ function render(){
 // a step is either plain HTML or {w: what to write, why: the reasoning}
 const stepHTML=(s,i)=>typeof s==='string'?`<div>${i+1}. ${s}</div>`:`<div class="ws"><div class="wl"><span class="tag">✍️ Write</span> ${s.w}</div><div class="why">💡 ${s.why}</div></div>`;
 const stepPlain=s=>typeof s==='string'?plain(s):plain(s.w)+' (why: '+plain(s.why)+')';
-function renderLearn(){const L=LEARN[topic],st=L.ex.steps;
-  const shown=st.slice(0,learnStep).map(stepHTML).join('');
-  const i=TOPICS.findIndex(t=>t.id===topic),last=i===TOPICS.length-1;
-  return`<div class="card"><h2>${T(topic).icon} ${T(topic).name}</h2>${L.sum}</div>
-  <div class="card"><h3>Worked example — ${L.ex.q}</h3><div class="steps">${shown||'<div class="dim">Press Space (or the button) to reveal one step at a time.</div>'}</div>
-  <div class="row">${learnStep<st.length?`<button class="primary" id="ls">Next step (Space) ${learnStep}/${st.length}</button><button id="lall">Show all</button>`:'<span class="feedback ok">✓ Done</span>'}
+function renderLearn(){const L=LEARN[topic],st=L.ex.steps,full=Math.floor(learnStep/2),half=learnStep%2;
+  const tut=(x,i,open)=>`<div class="tq"><div class="ask">🧑‍🏫 <b>${i+1}.</b> ${x.ask}</div>${open?`<div class="ans">${x.a}</div><div class="tip">💡 <b>Trick:</b> ${x.tip}</div>`:'<div class="dim" style="margin-top:6px">🤔 Think about it (or scribble it), then press Space.</div>'}</div>`;
+  const shown=st.slice(0,full).map((x,i)=>tut(x,i,true)).join('')+(half&&full<st.length?tut(st[full],full,false):'');
+  const done=full>=st.length,i=TOPICS.findIndex(t=>t.id===topic),last=i===TOPICS.length-1;
+  return`<div class="card"><h2>${T(topic).icon} ${T(topic).name} — tutor tricks</h2>${L.tricks}</div>
+  <div class="card"><h3>🏋️ Walkthrough — ${L.ex.q}</h3><div class="dim">This one is harder than the test on purpose — if you follow it, the practice questions will feel easy.</div>
+  <div class="steps">${shown||'<div class="dim" style="margin-top:8px">Press Space to get the first question.</div>'}</div>
+  <div class="row">${!done?`<button class="primary" id="ls">${half?'Show answer':'Next question'} (Space) · ${full}/${st.length}</button><button id="lall">Show all</button>`:'<span class="feedback ok">✓ Walkthrough done</span>'}
   <button id="toQ">Practice this topic → (Q)</button>${mode==='tour'?`<button class="primary" id="tourNext">${last?'Finished the refresher → start 🌊 easy flood':'Next topic →'}</button>`:''}</div></div>`}
 function renderQ(){if(!cur||cur.type!=='mcq'||(mode==='topic'&&cur.topic!==topic))newQuestion();const q=cur;
   const fill=[1,2,3,4].map(i=>`<span class="${i<=q.lvl?'f':''}"></span>`).join('');
@@ -158,7 +206,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   if(b.dataset.mode)return setMode(b.dataset.mode);if(b.dataset.t){topic=b.dataset.t;cur=null;if(mode==='flood'||mode==='ramp'||mode==='mock')mode='topic';if(mode==='tour')learnStep=0;return render()}
   if(b.dataset.v)return setView(b.dataset.v);if(b.dataset.o!==undefined)return grade(+b.dataset.o);
   const id=b.id;
-  if(id==='ls'){learnStep++;render()}else if(id==='lall'){learnStep=LEARN[topic].ex.steps.length;render()}
+  if(id==='ls'){learnStep++;render()}else if(id==='lall'){learnStep=LEARN[topic].ex.steps.length*2;render()}
   else if(id==='toQ'){if(mode==='tour')mode='topic';cur=null;setView('q')}else if(id==='toL')setView('learn')
   else if(id==='tourNext'){const i=TOPICS.findIndex(t=>t.id===topic);if(i<TOPICS.length-1){topic=TOPICS[i+1].id;learnStep=0;render()}else setMode('flood')}
   else if(id==='nx')next()
