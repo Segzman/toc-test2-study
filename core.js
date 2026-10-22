@@ -203,7 +203,11 @@ function genNFA(l){
   const pool=NFAS.filter(e=>e.lvl===l||(l===4&&e.lvl>=3)),e=pick(pool.length?pool:NFAS),f=w=>faAccepts(e.nfa,w),sig=B01;
   if(l===1&&rnd(2)){const o=memberOpts(f,sig,true,4);return mcq(`Which string does this NFA accept?${drawFA(e.nfa)}`,fmtW(o.right),o.wrongs.map(fmtW),[`L(N) = ${e.re}.`,...[o.right,...o.wrongs].map(w=>`${fmtW(w)} ${f(w)?'✓ reaches an accept state':'✗ no path ends in an accept state'}`)],{tag:'trace'})}
   if(l<=2&&rnd(2)){const others=shuffle(NFAS.filter(x=>x!==e&&!sameLang(reTest(x.re,sig),f,sig))).slice(0,3);
-    return mcq(`Which NFA recognizes <b>${e.re}</b>?`,drawFA(e.nfa,.8),others.map(x=>drawFA(x.nfa,.8)),[`Read each diagram path by path. The right one: every accepted path spells a string of ${e.re}.`,...others.map(x=>`A wrong one recognizes ${x.re} instead.`)],{wide:true})}
+    const q=mcq(`Which NFA recognizes <b>${e.re}</b>?`,drawFA(e.nfa,.8),others.map(x=>drawFA(x.nfa,.8)),[],{wide:true}),all=[e,...others];
+    const tests=allStrings(sig,6);
+    q.steps=['Translate the regex to English, then run a few test strings through each diagram.',...q.opts.map((o,i)=>{const x=all.find(y=>drawFA(y.nfa,.8)===o);if(x===e)return`Option ${i+1} ✓ recognizes ${e.re}.`;
+      const w=tests.find(t=>faAccepts(x.nfa,t)!==f(t));return`Option ${i+1} ✗ recognizes ${x.re} — e.g. it ${faAccepts(x.nfa,w)?'accepts':'rejects'} ${fmtW(w)}, which ${f(w)?'is':'isn’t'} in ${e.re}.`}),
+      'Tells: loop on the start state = star (zero allowed); required arrow before a loop = plus (at least one); ε-arrows from the start = union.'];return q}
   const m=mutants(e.re,sig,3),R=show(parseRe(e.re));
   return mcq(`${e.src?e.src+' style — ':''}Which regex R gives L(N) = R?${drawFA(e.nfa)}`,R,m,[`Split into paths that end in each accept state, write a regex per path, union them.`,`R = ${R}${e.src?' (official solution form)':''}.`,...m.map(x=>{const g=reTest(x,sig),w=allStrings(sig,6).find(s=>g(s)!==f(s));return`${x} ✗ — disagrees on ${fmtW(w)}`})])}
 
