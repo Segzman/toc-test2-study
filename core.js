@@ -47,21 +47,21 @@ function mutants(src,sig,k=3){const ok=reTest(src,sig),all=allStrings(sig,6),out
 const RULES={1:'1. a ∈ Σ',2:'2. ε',3:'3. ∅',4:'4. R₁ ∪ R₂ (union)',5:'5. R₁ ∘ R₂ (concatenation)',6:'6. R₁* (star)'};
 const Rx=s=>'R<sub>'+s+'</sub>';
 function proofSteps(src,sig){const ast=parseRe(src),steps=[],seen=new Set();
-  const add=(text,rule,res)=>{if(!seen.has(text)){seen.add(text);steps.push({text,rule,res})}};
+  const add=(text,rule,res,why)=>{if(!seen.has(text)){seen.add(text);steps.push({text,rule,res,why})}};
   const syms=new Set();let hasE=false,hasEmp=false,hasSig=false;
   (function walk(n){if(n.t==='sym')syms.add(n.v);else if(n.t==='eps')hasE=true;else if(n.t==='emp')hasEmp=true;else if(n.t==='sig')hasSig=true;if(n.a)walk(n.a);if(n.b)walk(n.b)})(ast);
   if(hasSig)sig.forEach(c=>syms.add(c));
   const S=sig.filter(c=>syms.has(c));
-  if(S.length)add(`${S.join(', ')} ∈ Σ, ∴ ${S.map(Rx).join(', ')}`,1,S);
-  if(hasE)add(`ε is the empty string, ∴ ${Rx('ε')}`,2,['ε']);
-  if(hasEmp)add(`∅ is the empty language, ∴ ${Rx('∅')}`,3,['∅']);
-  if(hasSig)add(`${sig.map(Rx).join(sig.length>2?', ':' and ')} ∴ ${Rx(sig.join(' ∪ '))} = ${Rx('Σ')} (since Σ = ${sig.join(' ∪ ')})`,4,['Σ']);
+  if(S.length)add(`${S.join(', ')} ∈ Σ, ∴ ${S.map(Rx).join(', ')}`,1,S,`Base case (rule 1): every symbol of Σ that appears in the expression is regular on its own. List them all in one line.`);
+  if(hasE)add(`ε is the empty string, ∴ ${Rx('ε')}`,2,['ε'],'Base case (rule 2): ε is regular by definition. Needed because ε appears in the expression.');
+  if(hasEmp)add(`∅ is the empty language, ∴ ${Rx('∅')}`,3,['∅'],'Base case (rule 3): ∅ is regular by definition.');
+  if(hasSig)add(`${sig.map(Rx).join(sig.length>2?', ':' and ')} ∴ ${Rx(sig.join(' ∪ '))} = ${Rx('Σ')} (since Σ = ${sig.join(' ∪ ')})`,4,['Σ'],'Σ is shorthand for a union of all its symbols, so rule 4 (union) makes it regular. Do this before using Σ in anything bigger.');
   (function rec(n){if(n.t==='par')return rec(n.a);if(!n.a)return;
-    if(n.t==='star'){rec(n.a);add(`${Rx(bare(n.a))} ∴ ${Rx(show(n))}`,6,[show(n)])}
-    if(n.t==='plus'){rec(n.a);const st={t:'star',a:n.a};add(`${Rx(bare(n.a))} ∴ ${Rx(show(st))}`,6,[show(st)]);
-      add(`${Rx(bare(n.a))} and ${Rx(show(st))} ∴ ${Rx(show(n))}   (since ${show(n.a)}${show(st)} = ${show(n)})`,5,[show(n)])}
-    if(n.t==='u'||n.t==='c'){rec(n.a);rec(n.b);add(`${Rx(bare(n.a))} and ${Rx(bare(n.b))} ∴ ${Rx(show(n))}`,n.t==='u'?4:5,[show(n)])}})(ast);
-  return{ast,steps:[{text:'Let R<sub>X</sub> denote the statement “X is regular”.',rule:0},...steps,{text:`∴ L = ${show(ast)} is regular (by the formal definition). ∎`,rule:0}]}}
+    if(n.t==='star'){rec(n.a);add(`${Rx(bare(n.a))} ∴ ${Rx(show(n))}`,6,[show(n)],`Rule 6 (star): ${bare(n.a)} is already shown regular, so its star is too. Star binds tightest (PKCU), so it comes right after the piece inside it.`)}
+    if(n.t==='plus'){rec(n.a);const st={t:'star',a:n.a};add(`${Rx(bare(n.a))} ∴ ${Rx(show(st))}`,6,[show(st)],`There is NO “plus” rule. Since a⁺ = a∘a*, first build the star (rule 6)…`);
+      add(`${Rx(bare(n.a))} and ${Rx(show(st))} ∴ ${Rx(show(n))}   (since ${show(n.a)}${show(st)} = ${show(n)})`,5,[show(n)],'…then concatenate the piece with its star (rule 5). Two steps for every ⁺ — a common lost mark.')}
+    if(n.t==='u'||n.t==='c'){rec(n.a);rec(n.b);add(`${Rx(bare(n.a))} and ${Rx(bare(n.b))} ∴ ${Rx(show(n))}`,n.t==='u'?4:5,[show(n)],n.t==='u'?`Rule 4 (union): both sides — ${bare(n.a)} and ${bare(n.b)} — were shown regular above. Union is lowest priority (PKCU), so it comes after its pieces are built.`:`Rule 5 (concatenation): ${bare(n.a)} and ${bare(n.b)} are both already regular, so writing them one after the other is regular too. Both premises must be named.`)}})(ast);
+  return{ast,steps:[{text:'Let R<sub>X</sub> denote the statement “X is regular”.',rule:0,why:'Define your notation first — the notes: “otherwise you are using a notation without establishing what it means.”'},...steps,{text:`∴ L = ${show(ast)} is regular (by the formal definition). ∎`,rule:0,why:'Conclude: the whole expression was built using only the 6 rules, so it is regular. The last line should name the original expression.'}]}}
 
 // ───────────── NFA / DFA ─────────────
 function faAccepts(m,w){const E=m.edges.map(([a,b,l])=>[a,b,l.split(',')]);
@@ -346,21 +346,48 @@ function genD2C(l){
 const GEN={regex:genRegex,nfa:genNFA,formal:genFormal,pump:genPump,cfg:genCFG,dfa2cfg:genD2C};
 
 // ═════════════ WRITTEN (exam-style, like the sample) ═════════════
-function pumpProof(F){if(F.cases)return['Suppose L is regular. Then the P.L.R.L. applies with some pumping length p.',`Let s = ${F.s}, so s ∈ L. |s| = ${F.len} > p.`,'∴ we can split s = xyz such that: (1) xyⁱz ∈ L ∀i ≥ 0, (2) |y| > 0, (3) |xy| ≤ p.',`Using (3), xy is in the ${F.first} part of s, since |${F.first}| = p.`,...F.cases,'All cases contradict (1) of the P.L.R.L.','∴ L is a non-regular language. ∎'];
-  return['Assume, for the purpose of finding a contradiction, that L is regular. Then the P.L.R.L. applies with some pumping length p > 0.',`Let s = ${F.s}. Then s ∈ L and |s| = ${F.len} ≥ p.`,'By the P.L.R.L., s = xyz with (1) xyⁱz ∈ L ∀i ≥ 0, (2) |y| > 0, (3) |xy| ≤ p.',`Because |xy| ≤ p, xy lies in the first p symbols of s, which are all ${F.X}s. So y = ${F.X}<sup>k</sup> with 1 ≤ k ≤ p (by (2)). Only one case.`,`Pump with i = ${F.i}: xy<sup>${F.i}</sup>z = ${F.pumped}.`,`But ${F.why}, so xy<sup>${F.i}</sup>z ∉ L. This contradicts (1).`,'∴ L is not regular. ∎']}
+const S_=(w,why)=>({w,why});
+function pumpProof(F){if(F.cases)return[S_('Suppose L is regular. Then the P.L.R.L. applies with some pumping length p.','Proof by contradiction: assume the opposite of what you want. “P.L.R.L. applies” unlocks its 3 conditions.'),
+  S_(`Let s = ${F.s}, so s ∈ L. |s| = ${F.len} > p.`,'Pick s in terms of p (never a number like 5) so the argument works for ANY pumping length. Show s ∈ L and |s| ≥ p — the lemma only promises splits for long strings.'),
+  S_('∴ we can split s = xyz such that: (1) xyⁱz ∈ L ∀i ≥ 0, (2) |y| > 0, (3) |xy| ≤ p.','Write out all 3 conditions with numbers — you will point back to them.'),
+  S_(`Using (3), xy is in the ${F.first} part of s, since |${F.first}| = p.`,'Condition (3) traps x and y inside the first p symbols. Here those symbols are not all the same, so y could take several forms.'),
+  ...F.cases.map(c=>S_(c,'You don’t choose the split — the lemma does. So cover EVERY form y could take: one bullet per case, each ending in “∉ L”.')),
+  S_('All cases contradict (1) of the P.L.R.L.','Say which condition is broken.'),S_('∴ L is a non-regular language. ∎','Every possible split failed, so the assumption “L is regular” was false.')];
+  return[S_('Assume, for the purpose of finding a contradiction, that L is regular. Then the P.L.R.L. applies with some pumping length p > 0.','Proof by contradiction: assume the opposite of what you want. “P.L.R.L. applies” unlocks its 3 conditions.'),
+  S_(`Let s = ${F.s}. Then s ∈ L and |s| = ${F.len} ≥ p.`,`Pick s in terms of p (never a number) so it works for ANY pumping length. Check both: it fits L’s pattern, and its length is at least p. Putting p copies of ${F.X} first is deliberate — see the next step.`),
+  S_('By the P.L.R.L., s = xyz with (1) xyⁱz ∈ L ∀i ≥ 0, (2) |y| > 0, (3) |xy| ≤ p.','Write out all 3 conditions with numbers — you will point back to them.'),
+  S_(`Because |xy| ≤ p, xy lies in the first p symbols of s, which are all ${F.X}s. So y = ${F.X}<sup>k</sup> with 1 ≤ k ≤ p (by (2)). Only one case.`,`Condition (3) is your weapon: x and y must fit in the first p symbols, which are all ${F.X}s. So y has only one possible form — no case split needed (“Proof B” in the notes). (2) guarantees k ≥ 1.`),
+  S_(`Pump with i = ${F.i}: xy<sup>${F.i}</sup>z = ${F.pumped}.`,F.crazy?'Pumping UP (i = 2) adds 0s and stays in L — useless. Pump DOWN (i = 0) to remove k 0s.':`Choose i to break the pattern: i = 2 adds k extra ${F.X}s, i = 0 (xy⁰z = xz) removes k. Write the resulting string with exponents.`),
+  S_(`But ${F.why}, so xy<sup>${F.i}</sup>z ∉ L. This contradicts (1).`,'Say exactly why the pumped string breaks L’s rule, then name the condition it contradicts.'),
+  S_('∴ L is not regular. ∎','The assumption led to a contradiction, so it was false.')]}
+
+function cfgSteps(F,T){const G=famCFG(F),E=famLenExplain(F,T),blk=n=>`${sup(F.u,''+evalE(F.k1,F.c1,n))}${sup(F.v,''+F.b)}${sup(F.w,''+evalE(F.k3,F.c3,n))}`;
+  const der=E.ok?cfgDerive(G,F.u.repeat(evalE(F.k1,F.c1,E.n))+F.v.repeat(F.b)+F.w.repeat(evalE(F.k3,F.c3,E.n))):null,L0=evalE(F.k1,F.c1,F.n0),R0=evalE(F.k3,F.c3,F.n0);
+  return[S_(`(a) Pattern: ${sup(F.u,expr(F.k1,F.c1))} · ${sup(F.v,''+F.b)} · ${sup(F.w,expr(F.k3,F.c3))} — the ${F.u}-count and ${F.w}-count both depend on n; the ${F.v}-block is fixed.`,'Linked counts can’t be built independently (that would allow mismatched counts). Link them with ONE recursive rule that adds to both sides at once — like A → 0A1.'),
+   S_(`List the smallest strings: n = ${F.n0} → ${blk(F.n0)}; n = ${F.n0+1} → ${blk(F.n0+1)}.`,`Going from n to n+1 adds ${sup(F.u,''+F.k1)} on the left and ${sup(F.w,''+F.k3)} on the right — that is the recursive rule.`),
+   S_(`S → ${rhsHTML(G.R.S[0],G.R)}`,L0||R0?`The smallest string has ${[L0?sup(F.u,''+L0)+' on the left':'',R0?sup(F.w,''+R0)+' on the right':''].filter(Boolean).join(' and ')} around the middle — the S-rule adds those extras once.`:'The smallest string is just the middle block, so S simply hands over to A.'),
+   S_(`A → ${rhsHTML(G.R.A[0],G.R)} | ${rhsHTML(G.R.A[1],G.R)}`,`A → ${rhsHTML(G.R.A[0],G.R)} adds one “n” worth to both sides; A → ${sup(F.v,''+F.b)} stops the recursion with the fixed middle.`),
+   S_(gHTML(G),'Write the full 4-tuple (V, Σ, R, S) — the course includes ε in Σ. Notation is graded.'),
+   S_(`Check: S ⇒* ${blk(F.n0)} and ${blk(F.n0+1)} ✓`,'Always test your grammar on the two smallest strings.'),
+   ...E.lines.map((x,i)=>S_('(b) '+x,i===0?'Add up the exponents to get |w| as a formula in n.':i===1?'Set the formula equal to the target and solve for n.':'n must be a whole number and at least the minimum from the set definition.')),
+   ...(der?[S_('Derivation: '+derivHTML(der),'One rule application per ⇒. Recursive rule n − (min n) times, then the stopping rule.')]:[S_(`∴ No string in L has length ${T}.`,'The formula itself is the proof — say it explicitly.')])]}
+function d2cSteps(M,w){const R=dfaRules(M);return[S_(`Variables: ${R.map(r=>sub(r.v)).join(', ')}`,'Rule ①: one variable Rᵢ for each state qᵢ.'),S_(`Start variable: ${sub(Rv(M.start))}`,`Rule ②: the variable of the start state ${M.start}.`),
+  ...R.map(r=>{const q='q'+r.v.slice(1);return S_(ruleHTML(r),`From ${q}: on 0 go to ${delta(M,q,'0')}, on 1 go to ${delta(M,q,'1')} → Rᵢ → aRⱼ for each arrow.${M.accept.includes(q)?` ${q} is an accept state → add ε.`:` ${q} doesn’t accept → no ε.`}`)}),
+  S_(`G = ({${R.map(r=>sub(r.v)).join(', ')}}, {0, 1, ε}, R, ${sub(Rv(M.start))})`,'Finish with the full 4-tuple.'),
+  ...(w?[S_('Derivation: '+dfaDerivation(M,w).steps.join(' ⇒ '),'Follow the DFA: each ⇒ reads one symbol and switches to the next state’s variable. End with ε in an accept state.')]:[])]}
 const WRITTEN={
- nfa(){const e=pick(NFAS.filter(x=>x.lvl<=3));return{q:`Make a state diagram for L = <b>${e.re}</b> (Σ = {0,1}).`,steps:['Break R into pieces (PKCU): build a small NFA per piece.','Union → new start state with ε-arrows into each piece. Star → loop back to the piece’s start, and make that start accepting (for ε). Concat → chain pieces.','One correct answer:'],ans:drawFA(e.nfa),check:'Test it: does it accept ε? the shortest strings? reject near-misses?'}},
- formal(){const[re,sig]=pick(FORMAL),{steps}=proofSteps(re,sig);return{q:`Σ = {${sig.join(', ')}}. Show that <b>${re}</b> is a regular expression (using the formal definition).`,steps:steps.map(s=>s.text+(s.rule?` <span class="dim">(rule ${s.rule})</span>`:''))}},
+ nfa(){const e=pick(NFAS.filter(x=>x.lvl<=3)),f=w=>faAccepts(e.nfa,w),yes=allStrings(B01,4).filter(f).slice(0,5).map(fmtW),no=allStrings(B01,3).filter(w=>!f(w)).slice(0,4).map(fmtW);
+   return{q:`Make a state diagram for L = <b>${e.re}</b> (Σ = {0,1}).`,steps:[S_(`In English: L = ${e.re} → members ${yes.join(', ')}; non-members ${no.join(', ')}.`,'Translate first and list a few members/non-members — you will test your diagram with these.'),
+     S_('Break R into pieces in PKCU order and build a tiny machine for each.','Symbol a: two states joined by an a-arrow. Concat: chain the pieces. Union: a new start state with ε-arrows into each piece. Star: loop back to the piece’s start and make that start accepting (ε must be accepted). ⁺: loop back, but the start is NOT accepting.'),
+     S_('One correct diagram:'+drawFA(e.nfa),'Mark the start arrow and double-circle the accept states — both are graded.'),
+     S_(`Trace: ${yes.slice(0,3).join(', ')} reach an accept state; ${no.slice(0,3).join(', ')} don’t.`,'Always trace ε and the shortest strings — most mistakes show up there.')]}},
+ formal(){const[re,sig]=pick(FORMAL),{steps}=proofSteps(re,sig);return{q:`Σ = {${sig.join(', ')}}. Show that <b>${re}</b> is a regular expression (using the formal definition).`,steps:steps.map(s=>S_(s.text,s.why))}},
  pump(){const F=pick(PUMP.filter(f=>!f.crazy));return{q:`Prove that L = ${F.L} is non-regular.`,steps:pumpProof(F)}},
- cfg(){const F=rnd(3)?randFam():SAMPLE_FAM,G=famCFG(F),K=F.k1+F.k3,C=F.c1+F.b+F.c3,ok=rnd(2),n=F.n0+1+rnd(2),T=ok?K*n+C:K*n+C+(K>1?1:pick([1,-1]))*(K>1?1:1)+(K===1?1:0),E=famLenExplain(F,T);
-   const der=E.ok?cfgDerive(G,F.u.repeat(evalE(F.k1,F.c1,E.n))+F.v.repeat(F.b)+F.w.repeat(evalE(F.k3,F.c3,E.n))):null;
-   return{q:`(a) Make a CFG for L = ${famHTML(F)}.<br>(b) Make a derivation where the derived string w has <b>|w| = ${T}</b>, or prove that it can’t be derived to that length.`,
-    steps:['(a) Matched counts (both depend on n) → nest them with a recursive variable that adds to both sides at once; the fixed middle block is the base case.',
-      `Smallest string (n = ${F.n0}): ${sup(F.u,''+evalE(F.k1,F.c1,F.n0))||'ε'}${sup(F.v,''+F.b)}${sup(F.w,''+evalE(F.k3,F.c3,F.n0))} → put that in the S-rule; each +1 to n adds ${sup(F.u,''+F.k1)} on the left and ${sup(F.w,''+F.k3)} on the right.`,gHTML(G),
-      ...E.lines.map(x=>'(b) '+x),...(der?['Derivation: '+derivHTML(der)]:[])]}},
- dfa2cfg(){const M=rnd(2)?DFA_M2:randDFA(),R=dfaRules(M),acc=allStrings(B01,5).filter(w=>w.length>=3&&faAccepts(M,w)),w=acc.length?pick(acc):null;
-   return{q:`Convert the following DFA into a CFG${w?`, then derive <b>${w}</b>`:''}.${drawFA(M)}`,steps:['① a variable Rᵢ for each state qᵢ. ② S = R of the start state. ③ Rᵢ → aRⱼ for each δ(qᵢ,a)=qⱼ, and Rᵢ → ε if qᵢ accepts.',
-     `G = ({${R.map(r=>sub(r.v)).join(', ')}}, {0, 1, ε}, R, ${sub(Rv(M.start))}) where R:<div class="rules">${R.map(ruleHTML).join('<br>')}</div>`,...(w?['Derivation: '+dfaDerivation(M,w).steps.join(' ⇒ ')]:[])]}},
+ cfg(){const F=rnd(3)?randFam():SAMPLE_FAM,K=F.k1+F.k3,C=F.c1+F.b+F.c3,n=F.n0+1+rnd(2),T=rnd(2)?K*n+C:(K>1?K*n+C+1:F.n0>0||C>2?K*F.n0+C-1:K*n+C+1);
+   return{q:`(a) Make a CFG for L = ${famHTML(F)}.<br>(b) Make a derivation where the derived string w has <b>|w| = ${T}</b>, or prove that it can’t be derived to that length.`,steps:cfgSteps(F,T)}},
+
+ dfa2cfg(){const M=rnd(2)?DFA_M2:randDFA(),acc=allStrings(B01,5).filter(w=>w.length>=3&&faAccepts(M,w)),w=acc.length?pick(acc):null;
+   return{q:`Convert the following DFA into a CFG${w?`, then derive <b>${w}</b>`:''}.${drawFA(M)}`,steps:d2cSteps(M,w)}},
  regex(){const[d,re]=pick(RE_DESC);return{q:`Σ = {0,1}. Give a regular expression R for ${d}, and list 3 strings in L(R) and 2 not in it.`,steps:[`One answer: R = ${show(parseRe(re))}`,`In: ${allStrings(B01,4).filter(reTest(re,B01)).slice(0,4).map(fmtW).join(', ')} · Out: ${allStrings(B01,3).filter(w=>!reTest(re,B01)(w)).slice(0,3).map(fmtW).join(', ')}`]}},
 };
 const BONUS=[
