@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ToC Test 2 — Speedrun</title>
+<style>
+:root{--bg:#121218;--p:#1b1b24;--p2:#242431;--t:#e9e9f2;--d:#9a9ab0;--a:#7c7cff;--ok:#3ecf8e;--no:#ff6b6b;--y:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:15px/1.55 system-ui,-apple-system,sans-serif}
+header{display:flex;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid #2a2a38;position:sticky;top:0;background:var(--bg);z-index:5;flex-wrap:wrap}
+header h1{font-size:16px;margin:0 10px 0 0}button{font:inherit;color:var(--t);background:var(--p2);border:1px solid #34344a;border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--a)}button.on{background:var(--a);border-color:var(--a);color:#fff}button.primary{background:var(--a);border:0;color:#fff;font-weight:600}
+.stats{margin-left:auto;color:var(--d);font-size:13px}
+.wrap{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 54px)}
+nav{border-right:1px solid #2a2a38;padding:12px}nav .t{display:block;width:100%;text-align:left;margin-bottom:6px;background:transparent;border:1px solid transparent}
+nav .t.on{border-color:var(--a);background:var(--p)}.pips{font-size:11px;color:var(--d);display:block}.pips b{color:var(--y)}
+main{padding:18px 26px;max-width:980px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}.tabs .k{font-size:11px;opacity:.7}
+.card{background:var(--p);border:1px solid #2a2a38;border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.q{font-size:17px}.opts{display:grid;gap:8px;margin-top:14px}.opts.wide{grid-template-columns:1fr 1fr}
+.opt{text-align:left;padding:10px 12px;background:var(--p2);display:flex;gap:10px;align-items:flex-start}.opt .n{color:var(--d);font-size:12px;min-width:14px}
+.opt.right{border-color:var(--ok);background:#163a2a}.opt.wrong{border-color:var(--no);background:#3a1a1e}
+.steps{margin-top:12px;border-left:3px solid var(--a);padding-left:12px}.steps div{margin:6px 0}
+.step{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;background:#0006;border-radius:8px;padding:8px 10px;margin:8px 0;line-height:1.7}
+.rules{font-family:ui-monospace,Menlo,monospace;background:#0006;border-radius:8px;padding:6px 10px;margin:6px 0;display:inline-block;line-height:1.7}
+svg.fa{color:#cfd3ff;display:block;margin:8px 0;max-width:100%;height:auto}svg.fa .st{fill:#1f2340;stroke:currentColor}svg.fa text{fill:currentColor;font:13px system-ui}
+.lvl{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;background:#2c2c40;color:var(--y);margin-right:6px}
+.topicTag{font-size:12px;color:var(--d)}.dim{color:var(--d);font-size:12px}
+.ramp{display:flex;gap:4px;margin:6px 0 12px}.ramp span{flex:1;height:6px;border-radius:3px;background:#2c2c40}.ramp span.f{background:var(--a)}
+textarea{width:100%;min-height:110px;background:#0d0d13;color:var(--t);border:1px solid #34344a;border-radius:8px;padding:10px;font:14px ui-monospace,Menlo,monospace}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.big{font-size:28px;font-weight:700}
+ul{margin:6px 0;padding-left:20px}li{margin:3px 0}h2{margin:0 0 8px;font-size:20px}h3{margin:14px 0 6px;font-size:15px;color:var(--y)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--a);color:#fff;padding:8px 16px;border-radius:20px;font-weight:600;z-index:50}
+.feedback{font-weight:600;margin-top:10px}.feedback.ok{color:var(--ok)}.feedback.no{color:var(--no)}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}nav{border:0}.opts.wide{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>🧠 ToC Test 2</h1>
+<button data-mode="tour">📘 Refresher tour</button><button data-mode="flood">🌊 Easy flood</button><button data-mode="ramp">🚀 Easy → Crazy</button><button data-mode="topic">🎯 One topic</button><button data-mode="mock">📝 Mock test</button>
+<span class="stats" id="stats"></span><button id="reset" title="reset progress">↺</button></header>
+<div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
+<script src="core.js"></script>
+<script>
+// ───────────── refresher cards (from the Week 3–4 filled notes + ICA solutions) ─────────────
+const LEARN={
+regex:{sum:`<ul><li>Regular operations: <b>∪</b> union, <b>∘</b> concat (often omitted), <b>*</b> Kleene star (0 or more).</li>
+<li><b>Precedence “PKCU” (Pikachu order)</b>: Parentheses → star → concat → union. <code>01*∪1 = (0(1*)) ∪ 1</code>.</li>
+<li><b>ε vs ∅</b>: ε = "" (one empty string), ∅ = {} (no strings). R∪∅ = R, R∘ε = R, R∘∅ = ∅, ∅* = ε, 0∪ε = {0,ε}.</li>
+<li>Shorthand: a⁺ = aa* = a*a · aⁿ = n copies · Σ = 0∪1 (as regex) · Σ* = all strings.</li>
+<li>Identities: (u∪v)* = (u*∪v)* = (u*v*)* = u*(vu*)* = (u*v)*u* · (uv)*u = u(vu)* · u(v∪w) = uv∪uw.</li></ul>`,
+ ex:{q:'Identify L for (01)* and 0*1 (Exercise 3.1)',steps:['(01)* = {ε, 01, 0101, 010101, …} = {w | w is any number of 01’s concatenated}.','Note ε is in it — star allows zero copies.','0*1 = {1, 01, 001, 0001, …} = {w | any number of 0s followed by a single 1}.','Check edge cases first: ε, single symbols, the shortest member.']}},
+nfa:{sum:`<ul><li>DFA ⟷ NFA ⟷ regex ⟷ English/set-builder all describe the same languages (regular).</li>
+<li><b>Regex → diagram</b>: build piece by piece. Symbol a: two states, arrow a. Concat: chain the pieces. Union: new start with ε-arrows into each piece. Star: loop back to the piece’s start and make it accepting (so ε is accepted). a⁺: loop, but the start is NOT accepting.</li>
+<li><b>Diagram → regex</b> (ICA-3): annotate each section, list every path that ends in an accept state, write a regex per path, union them. 0 then loop 0 = 0⁺.</li>
+<li>Always test: does it accept ε? the shortest strings? reject a near-miss?</li></ul>`,
+ ex:{q:'Sample Q1: Make a state diagram for L = (01)* ∪ 1',steps:['PKCU: two pieces joined by ∪ — (01)* and 1.','(01)*: state q1 (accepting, so ε works) →0→ q2 →1→ back to q1.','1: state q3 →1→ q4 (accepting).','Union: new start q0 with ε-arrows to q1 and q3.','Result:'+drawFA(NFAS.find(e=>e.re==='(01)*∪1').nfa),'Check: ε ✓ (q0→ε→q1), 01 ✓, 0101 ✓, 1 ✓, 0 ✗, 11 ✗.']}},
+formal:{sum:`<ul><li>R is regular if R is: <b>1.</b> a for some a ∈ Σ · <b>2.</b> ε · <b>3.</b> ∅ (base cases) · <b>4.</b> R₁∪R₂ · <b>5.</b> R₁∘R₂ · <b>6.</b> R₁* (recursive cases).</li>
+<li>Proof shape: <b>“Let R<sub>X</sub> denote ‘X is regular’.”</b> → base cases → build up inside-out in PKCU order → “∴ R<sub>L</sub>”.</li>
+<li>Each line: premises ∴ conclusion. Union/concat need <b>both</b> parts already shown.</li>
+<li>a⁺ takes 2 steps (a* by 6, then a∘a* by 5). Σ = 0∪1 is a union step.</li></ul>`,
+ ex:{q:'Sample Q3: Show that 10 ∪ (ε*00)* is a regular expression',steps:proofSteps('10∪(ε*00)*',B01).steps.map(s=>s.text+(s.rule?` <span class="dim">(rule ${s.rule})</span>`:''))}},
+pump:{sum:`<ul><li><b>P.L.R.L.</b>: if A is regular, ∃p such that every s ∈ A with |s| ≥ p splits s = xyz with (1) xyⁱz ∈ A ∀i ≥ 0, (2) |y| > 0, (3) |xy| ≤ p.</li>
+<li>Use the contrapositive: “A can’t be pumped ⇒ A is not regular”. Proof by contradiction.</li>
+<li><b>Template</b>: ① Assume L regular → P.L.R.L. applies. ② Pick s in terms of p, show s ∈ L and |s| ≥ p. ③ Use |xy| ≤ p to pin down y (ideally one case). ④ Pump (i = 0 or 2) → string ∉ L → contradiction → L not regular.</li>
+<li>Pick s so its first p symbols are all the same (0ᵖ1ᵖ): then y = 0ᵏ, one case. If L has a prefix (110ⁿ⁻²1ⁿ), do cases.</li>
+<li>xy⁰z = xz (“pump down”). For {0ⁿ1ᵐ | n > m} you MUST pump down.</li></ul>`,
+ ex:{q:'Sample Q2: Prove L = {3ⁿ⁺¹2²1ⁿ | n ≥ 0} is non-regular',steps:pumpProof(PUMP.find(f=>f.sample))}},
+cfg:{sum:`<ul><li>CFG G = (V, Σ, R, S): V variables, Σ terminals, V ∩ Σ = ∅, R rules (single variable → string of V ∪ Σ), S ∈ V start. Course writes ε in Σ.</li>
+<li>Context-free = left side is ONE variable (no xxAy → …, no AB → …). “|” = or.</li>
+<li>Derivation: replace variables step by step (⇒). Parse tree: read leaves left → right. L(G) = {w ∈ Σ* | S ⇒* w}.</li>
+<li><b>Design patterns</b>: counts that depend on each other → nest: A → uAw | middle. Independent blocks → S → ABC with A → 1A | ε. Union → S → A | B. Concat → S → AB. “Anything” → A → 0A | 1A | ε.</li>
+<li><b>Length trick (sample 4b)</b>: |w| as a formula in n; set equal to the target; n must be an integer ≥ the minimum, otherwise impossible.</li></ul>`,
+ ex:{q:'Sample Q4: CFG for L = {c^{n−1}a³b^{n+1} | n ≥ 1}; derivation with |w| = 9 or prove impossible',steps:(()=>{const F=SAMPLE_FAM,G=famCFG(F),E=famLenExplain(F,9);return['Smallest member (n = 1): c⁰a³b² = aaabb → S → Abb.','Each +1 to n adds one c on the left and one b on the right → A → cAb, base A → aaa.',gHTML(G),...E.lines,'Derivation: '+derivHTML(cfgDerive(G,'ccaaabbbb'))]})()}},
+dfa2cfg:{sum:`<ul><li>① A variable Rᵢ for each state qᵢ.</li><li>② Start variable S = R of the DFA’s start state.</li>
+<li>③ For each transition δ(qᵢ, a) = qⱼ add Rᵢ → aRⱼ; for each accept state add Rᵢ → ε.</li>
+<li>Deriving w takes |w| + 1 steps; each line = symbols read so far + the current state’s variable.</li>
+<li>Shortcut (not the conversion, but valid): write L(M) as a regex and build a grammar from it (Σ*101Σ* → S → A101A, A → 0A | 1A | ε).</li></ul>`,
+ ex:{q:'Convert DFA M₂ (strings containing 101) into a CFG and derive 0011010',steps:[drawFA(DFA_M2),'Variables R₁…R₄ for q₁…q₄; start variable R₁.',`<div class="rules">${dfaRules(DFA_M2).map(ruleHTML).join('<br>')}</div>`,'G₅ = ({R₁, R₂, R₃, R₄}, {0, 1, ε}, R, R₁).','Derivation: '+dfaDerivation(DFA_M2,'0011010').steps.join(' ⇒ ')]}},
+};
+
+// ───────────── state ─────────────
+const K='toc2';const ST=Object.assign({lvl:{},streak:{},miss:{},right:0,wrong:0,best:0,run:0},JSON.parse(localStorage.getItem(K)||'{}'));
+const save=()=>localStorage.setItem(K,JSON.stringify(ST));TOPICS.forEach(t=>{ST.lvl[t.id]=ST.lvl[t.id]||1});
+let mode='tour',topic='regex',view='learn',cur=null,answered=false,learnStep=0,wStep=0,mock=null,tourI=0;
+const $=id=>document.getElementById(id),T=id=>TOPICS.find(t=>t.id===id);
+function toast(s){const d=document.createElement('div');d.className='toast';d.textContent=s;document.body.appendChild(d);setTimeout(()=>d.remove(),1600)}
+
+function newQuestion(){
+  let t=topic,l=ST.lvl[topic];
+  if(mode==='flood'){t=pick(TOPICS).id;l=1}
+  if(mode==='ramp'){const min=Math.min(...TOPICS.map(x=>ST.lvl[x.id]));const c=TOPICS.filter(x=>ST.lvl[x.id]<=min+1);t=pick(c).id;l=ST.lvl[t]}
+  cur={...GEN[t](l),topic:t,lvl:l};answered=false;topic=t}
+function newWritten(){const t=topic;cur={...WRITTEN[WRITTEN_FOR[t]](),type:'written',topic:t,lvl:'exam'};wStep=0}
+
+// ───────────── render ─────────────
+function render(){
+  document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  $('stats').innerHTML=`✓ ${ST.right} · ✗ ${ST.wrong} · streak ${ST.run} (best ${ST.best})`;
+  $('nav').innerHTML='<div class="dim" style="margin-bottom:6px">Topics — level</div>'+TOPICS.map(t=>`<button class="t ${t.id===topic?'on':''}" data-t="${t.id}">${t.icon} ${t.name}<span class="pips">${[1,2,3,4].map(i=>i<=ST.lvl[t.id]?'<b>●</b>':'○').join('')} ${LEVELS[ST.lvl[t.id]]}</span></button>`).join('')
+    +`<div class="dim" style="margin-top:14px">Keys: <b>L</b> refresher · <b>Q</b> questions · <b>W</b> written · <b>1–4</b> answer · <b>Enter</b> next · <b>Space</b> next step</div>`;
+  if(mode==='mock')return renderMock();
+  const tabs=`<div class="tabs"><button class="${view==='learn'?'on':''}" data-v="learn">📘 Refresher <span class="k">L</span></button><button class="${view==='q'?'on':''}" data-v="q">✏️ Questions <span class="k">Q</span></button><button class="${view==='w'?'on':''}" data-v="w">✍️ Exam-style written <span class="k">W</span></button>
+    <span class="topicTag">${T(topic).icon} ${T(topic).name}${mode==='flood'?' · 🌊 flood: easy questions from every topic':mode==='ramp'?' · 🚀 levels rise as you get them right':''}</span></div>`;
+  $('main').innerHTML=tabs+(view==='learn'?renderLearn():view==='w'?renderWritten():renderQ());
+  wireTutor();
+}
+function renderLearn(){const L=LEARN[topic],st=L.ex.steps;
+  const shown=st.slice(0,learnStep).map((s,i)=>`<div>${i+1}. ${s}</div>`).join('');
+  const i=TOPICS.findIndex(t=>t.id===topic),last=i===TOPICS.length-1;
+  return`<div class="card"><h2>${T(topic).icon} ${T(topic).name}</h2>${L.sum}</div>
+  <div class="card"><h3>Worked example — ${L.ex.q}</h3><div class="steps">${shown||'<div class="dim">Press Space (or the button) to reveal one step at a time.</div>'}</div>
+  <div class="row">${learnStep<st.length?`<button class="primary" id="ls">Next step (Space) ${learnStep}/${st.length}</button><button id="lall">Show all</button>`:'<span class="feedback ok">✓ Done</span>'}
+  <button id="toQ">Practice this topic → (Q)</button>${mode==='tour'?`<button class="primary" id="tourNext">${last?'Finished the refresher → start 🌊 easy flood':'Next topic →'}</button>`:''}</div></div>`}
+function renderQ(){if(!cur||cur.type!=='mcq'||(mode==='topic'&&cur.topic!==topic))newQuestion();const q=cur;
+  const fill=[1,2,3,4].map(i=>`<span class="${i<=q.lvl?'f':''}"></span>`).join('');
+  return`<div class="card"><span class="lvl">${LEVELS[q.lvl]}</span><span class="topicTag">${T(q.topic).icon} ${T(q.topic).name}</span><div class="ramp">${fill}</div>
+  <div class="q">${q.q}</div><div class="opts ${q.wide?'wide':''}">${q.opts.map((o,i)=>`<button class="opt ${answered?(i===q.ans?'right':i===answered.pick?'wrong':''):''}" data-o="${i}"><span class="n">${i+1}</span><span>${o}</span></button>`).join('')}</div>
+  ${answered?`<div class="feedback ${answered.ok?'ok':'no'}">${answered.ok?'✓ Correct':'✗ Not quite — here’s why:'}</div><div class="steps">${q.steps.map(s=>`<div>${s}</div>`).join('')}</div>
+  <div class="row"><button class="primary" id="nx">Next (Enter)</button><button id="toL">📘 Refresher for this (L)</button></div>`:''}</div>`}
+function renderWritten(){if(mode!=='mock'&&(!cur||cur.type!=='written'||cur.topic!==topic))newWritten();const q=cur;
+  return`<div class="card"><span class="lvl">Exam-style</span><span class="topicTag">like the sample questions — work on paper or type below</span>
+  <div class="q" style="margin-top:8px">${q.q}</div><textarea id="wa" placeholder="Your answer (optional) — then reveal the steps and compare">${q.draft||''}</textarea>
+  <div class="row"><button class="primary" id="ws">${wStep<q.steps.length?`Reveal next step (Space) ${wStep}/${q.steps.length}`:'All steps shown'}</button><button id="wall">Show full solution</button><button id="wn">New question</button></div>
+  <div class="steps">${q.steps.slice(0,wStep).map((s,i)=>`<div>${i+1}. ${s}</div>`).join('')}${wStep>=q.steps.length&&q.ans?q.ans:''}${wStep>=q.steps.length&&q.check?`<div class="dim">${q.check}</div>`:''}</div>
+  ${wStep>=q.steps.length?`<div class="row"><button id="wok">✓ I got it</button><button id="wno">✗ I missed something</button></div>`:''}</div>`}
+
+// ───────────── mock test: 12 MCQ + 4 written + bonus ─────────────
+function startMock(){const items=[];TOPICS.forEach(t=>{items.push({...GEN[t.id](2),topic:t.id,lvl:2},{...GEN[t.id](3),topic:t.id,lvl:3})});
+  const W=shuffle(['nfa','formal','pump','cfg','dfa2cfg']).slice(0,4);
+  mock={items:[...shuffle(items),...W.map(k=>({...WRITTEN[k](),type:'written',topic:k,lvl:'written'})),{...pick(BONUS)(),type:'written',topic:'pump',lvl:'bonus',bonus:true}],i:0,t0:Date.now(),res:[]};wStep=0}
+function renderMock(){if(!mock)startMock();const m=mock;
+  if(m.i>=m.items.length){const mc=m.res.filter((r,i)=>m.items[i].type==='mcq'),wr=m.res.filter((r,i)=>m.items[i].type==='written'&&!m.items[i].bonus);
+    $('main').innerHTML=`<div class="card"><h2>📝 Mock test done</h2><div class="big">MCQ ${mc.filter(Boolean).length}/12 · Written ${wr.filter(Boolean).length}/4 ${m.res[m.res.length-1]?'· Bonus ✓':''}</div>
+    <div class="dim">Time: ${Math.round((Date.now()-m.t0)/60000)} min</div><div class="row"><button class="primary" id="mockAgain">New mock test</button></div></div>`;return wireTutor()}
+  cur=m.items[m.i];const head=`<div class="tabs"><b>📝 Mock test</b> <span class="topicTag">Q${m.i+1}/${m.items.length} · ${cur.type==='mcq'?'Multiple choice':cur.bonus?'BONUS':'Written'} · ${Math.round((Date.now()-m.t0)/60000)} min</span></div>`;
+  $('main').innerHTML=head+(cur.type==='mcq'?renderQ():renderWritten());wireTutor()}
+
+// ───────────── actions ─────────────
+function grade(i){if(answered||!cur||cur.type!=='mcq')return;const ok=i===cur.ans;answered={pick:i,ok};
+  if(mode==='mock'){mock.res[mock.i]=ok;return render()}
+  const t=cur.topic;if(ok){ST.right++;ST.run++;ST.best=Math.max(ST.best,ST.run);ST.miss[t]=0;ST.streak[t]=(ST.streak[t]||0)+1;
+    if(mode!=='flood'&&ST.streak[t]>=3&&ST.lvl[t]<4){ST.lvl[t]++;ST.streak[t]=0;toast(`${T(t).icon} ${T(t).name} → ${LEVELS[ST.lvl[t]]}!`)}
+    if(mode==='flood'&&ST.run>0&&ST.run%12===0)toast('🔥 '+ST.run+' in a row — try 🚀 Easy → Crazy');}
+  else{ST.wrong++;ST.run=0;ST.streak[t]=0;ST.miss[t]=(ST.miss[t]||0)+1;if(ST.miss[t]>=2&&ST.lvl[t]>1){ST.lvl[t]--;ST.miss[t]=0;toast(`Back to ${LEVELS[ST.lvl[t]]} for ${T(t).name} — build it up again`)}}
+  save();render();
+  if(ok&&mode==='flood')setTimeout(()=>{if(answered&&answered.ok&&view==='q'){next()}},900)}
+function next(){if(mode==='mock'){if(cur.type==='mcq'&&!answered)return;mock.i++;answered=false;wStep=0;return render()}
+  if(view==='w')newWritten();else newQuestion();render()}
+function setView(v){if(mode==='mock')return;view=v;if(v==='learn')learnStep=0;render()}
+function setMode(m){mode=m;cur=null;answered=false;if(m==='tour'){topic=TOPICS[0].id;view='learn';learnStep=0}else if(m==='mock'){mock=null}else{view='q'}render()}
+function plain(h){const d=document.createElement('div');d.innerHTML=h.replace(/<svg[\s\S]*?<\/svg>/g,'[diagram]');return d.innerText.trim()}
+function faText(h){const m=h.match(/<svg/);return m?' (diagram on screen)':''}
+function wireTutor(){if(!window.Tutor)return;Tutor.context=()=>{if(!cur)return'Refresher: '+T(topic).name;
+  if(cur.type==='mcq')return`[${T(cur.topic).name}, ${LEVELS[cur.lvl]||cur.lvl}] ${plain(cur.q)}${faText(cur.q)}\nOptions: ${cur.opts.map((o,i)=>(i+1)+') '+plain(o)).join(' | ')}${answered?`\nI picked ${answered.pick+1}, correct is ${cur.ans+1}.\nShown explanation: ${cur.steps.map(plain).join(' / ')}`:''}`;
+  return`[Written, ${T(cur.topic).name}] ${plain(cur.q)}\nModel solution: ${cur.steps.map(plain).join(' / ')}`}}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.mode)return setMode(b.dataset.mode);if(b.dataset.t){topic=b.dataset.t;cur=null;if(mode==='flood'||mode==='ramp'||mode==='mock')mode='topic';if(mode==='tour')learnStep=0;return render()}
+  if(b.dataset.v)return setView(b.dataset.v);if(b.dataset.o!==undefined)return grade(+b.dataset.o);
+  const id=b.id;
+  if(id==='ls'){learnStep++;render()}else if(id==='lall'){learnStep=LEARN[topic].ex.steps.length;render()}
+  else if(id==='toQ'){if(mode==='tour')mode='topic';cur=null;setView('q')}else if(id==='toL')setView('learn')
+  else if(id==='tourNext'){const i=TOPICS.findIndex(t=>t.id===topic);if(i<TOPICS.length-1){topic=TOPICS[i+1].id;learnStep=0;render()}else setMode('flood')}
+  else if(id==='nx')next()
+  else if(id==='why')Tutor.ask('I got this wrong and don’t get it. Can you explain it a different way, step by step?')
+  else if(id==='ws'){if(wStep<cur.steps.length){cur.draft=$('wa').value;wStep++;mode==='mock'?renderMock():render()}}
+  else if(id==='wall'){cur.draft=$('wa').value;wStep=cur.steps.length;mode==='mock'?renderMock():render()}
+  else if(id==='grade'){const a=$('wa').value.trim();if(!a)return toast('Type your answer in the box first');cur.draft=a;Tutor.ask('Grade my answer like the prof would (correctness, notation, completeness). Point out exactly what is missing or wrong.\n\nMy answer:\n'+a)}
+  else if(id==='wn'){if(mode==='mock')return;newWritten();render()}
+  else if(id==='wok'||id==='wno'){if(mode==='mock'){mock.res[mock.i]=id==='wok';mock.i++;wStep=0;return render()}id==='wok'?ST.right++:ST.wrong++;save();newWritten();render()}
+  else if(id==='mockAgain'){mock=null;render()}
+  else if(id==='reset'&&confirm('Reset all progress?')){localStorage.removeItem(K);location.reload()}});
+document.addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
+  if(k==='l')setView('learn');else if(k==='q')setView('q');else if(k==='w')setView('w');
+  else if(/^[1-4]$/.test(k))grade(+k-1);
+  else if(k==='enter'){e.preventDefault();const b=$('nx')||$('tourNext');if(b)b.click()}
+  else if(k===' '){e.preventDefault();const b=$('ls')||$('ws');if(b)b.click()}});
+render();
+</script></body></html>
