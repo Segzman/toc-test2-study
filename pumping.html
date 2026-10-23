@@ -25,10 +25,19 @@ table{border-collapse:collapse;width:100%;font-size:13.5px}td,th{border-bottom:1
 .path{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:8px 0}.st{padding:3px 8px;border-radius:12px;background:#2c2c40;font:13px ui-monospace,Menlo,monospace}.st.rep{background:var(--y);color:#1a1a1a;font-weight:700}
 .arr{color:var(--d);font-size:12px}
 svg.fa{color:#cfd3ff;display:block;margin:8px 0;max-width:100%;height:auto}svg.fa .st{fill:#1f2340;stroke:currentColor}svg.fa text{fill:currentColor;font:13px system-ui}
+.row2{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.paper{background:#fbfaf3 repeating-linear-gradient(#fbfaf3 0 31px,#cfe0f5 31px 32px);border-radius:10px;padding:18px 18px 18px 54px;position:relative;color:#1d3d8f;font:20px/1.6 "Bradley Hand","Noteworthy","Segoe Print","Comic Sans MS",cursive}
+.paper::before{content:'';position:absolute;left:40px;top:0;bottom:0;width:2px;background:#f2a1a1}
+.ptitle{font-weight:700;margin-bottom:8px;color:#14306f}.pline{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin:4px 0 10px}
+.ink .ln{position:absolute;left:-38px;width:24px;text-align:right;color:#c55;font-size:15px}.ink{position:relative}.ink b{color:#0f2a6b}
+.red{color:#c0392b;font-size:16.5px;line-height:1.45}
+.hviz{background:#1b1b24;border-radius:8px;padding:2px 10px 8px;margin:6px 0;font:14px system-ui;color:var(--t)}.hcap{font-size:13px;color:#ccc}
+.paper .ok{color:#1a8a4a}.paper .no{color:#d0322b}.hviz .ok{color:var(--ok)}.hviz .no{color:var(--no)}
+@media(max-width:800px){.pline{grid-template-columns:1fr}}
 @media(max-width:800px){.moves{grid-template-columns:1fr 1fr}}
 </style></head><body>
 <header><h1>🎈 Pumping Lemma — see it</h1>
-<button data-tab="idea">① The short method</button><button data-tab="xyz">② xyz → xyⁱz step by step</button><button data-tab="game">③ Break it (non-regular)</button><button data-tab="reg">④ Why regular ones survive</button><a href="index.html" style="margin-left:auto;color:var(--d);font-size:13px" id="other">← Test 2 practice site</a></header>
+<button data-tab="idea">① The short method</button><button data-tab="xyz">② xyz → xyⁱz step by step</button><button data-tab="game">③ Break it (non-regular)</button><button data-tab="reg">④ Why regular ones survive</button><button data-tab="hard">⑤ Harder proofs ✍️</button><a href="index.html" style="margin-left:auto;color:var(--d);font-size:13px" id="other">← Test 2 practice site</a></header>
 <main id="main"></main>
 <script src="core.js"></script>
 <script>
@@ -173,18 +182,93 @@ function renderXYZ(){const st=xyzSteps(),n=Math.min(xStep,st.length);if(!xq)newX
  <div style="display:grid;gap:6px;margin-top:10px">${q.opts.map((o,j)=>`<button class="xo" data-j="${j}" style="text-align:left;${q.pickd!==null?(j===q.ans?'border-color:var(--ok);background:#163a2a':j===q.pickd?'border-color:var(--no);background:#3a1a1e':''):''}">${j+1}. ${o}</button>`).join('')}</div>
  ${q.pickd!==null?`<div class="proof" style="margin-top:10px"><div>xy<sup>${q.i}</sup>z = ${sup2(q.S.X,'a')}${q.i?' · '+Array(q.i).fill(sup2(q.S.X,'k')).join(' · '):''} · ${sup2(q.S.X,q.S.mH+'−a−k')}${q.S.restH} = ${sup2(q.S.X,`a ${q.i?'+ '+(q.i>1?q.i:'')+'k':''} + ${q.S.mH} − a − k`)}${q.S.restH} = <b>${sup2(q.S.X,addI(q.S.mH,q.i))}${q.S.restH}</b><div class="why">${q.i===0?'i = 0 deletes y: you lose k.':`i = ${q.i} has ${q.i} copies of y, but one copy was already in s — so you gain ${q.i-1===1?'':q.i-1}k extra. Common mistake: writing +${q.i}k.`} Rule: ${q.S.rule} → ${q.S.pred(pump(q.S.X.repeat(q.S.m(5))+q.S.rest(5),1,2,q.i))?'still in L — this i doesn’t break it, try another!':'∉ L, contradiction.'}</div></div></div><button class="on" id="xnext" style="margin-top:8px">Another (Enter)</button>`:''}</div>`}
 
+// ───────── ⑤ harder proofs, handwritten style ─────────
+const HP=[
+ {id:'B',title:'Class extra example: B = {(01)<sup>n</sup>0<sup>2n</sup> | n ∈ ℤ₀⁺}',p:4,
+  pred:w=>{const m=w.match(/^((?:01)*)(0*)$/);return!!m&&m[2].length===m[1].length},s:p=>'01'.repeat(p)+'0'.repeat(2*p),
+  lines:[
+  ['Suppose B is regular. Then the P.L.R.L. applies.','Proof by contradiction: pretend B IS regular, then hunt for something impossible.'],
+  ['Let s = (01)<sup>p</sup>0<sup>2p</sup>. s has the form of B (n = p), so s ∈ B.','(01)<sup>p</sup> means “01” written p times: 0101…01. It is NOT 0<sup>p</sup>1<sup>p</sup>. Then 2p zeros.',{a:0,k:0,i:1,cap:'s with p = 4: (01)⁴ then 0⁸'}],
+  ['|s| = 2p + 2p = 4p ≥ p, so we can split s = xyz such that:<br>(1) xy<sup>i</sup>z ∈ B ∀i ∈ ℤ₀⁺ &nbsp;(2) |y| &gt; 0 &nbsp;(3) |xy| ≤ p','(01)<sup>p</sup> is 2p symbols long (2 per copy) + 2p zeros = 4p. Then copy the 3 promises — see the decoder above for what each says in English.'],
+  ['By (3), y is in the (01)<sup>p</sup> section of s.','The first p symbols lie inside 0101… (that part is 2p long). But they ALTERNATE, so y could be 0, 1, 01, 10, 010… → we need CASES.'],
+  ['<b>Case y = 1:</b> xy<sup>0</sup>z = xz begins with p zeros but only p − 1 ones, so xz ∉ B.','Pump DOWN (i = 0) = delete y. Deleting a 1 puts two 0s side by side inside the 01-part — the alternation is broken.',{a:1,k:1,i:0,cap:'y = 1 deleted → “00” appears'}],
+  ['<b>Case y = 0:</b> xz begins with p ones but only p − 1 zeros, so xz ∉ B.','Deleting a 0 puts two 1s together (or makes it start with 1). Broken again.',{a:0,k:1,i:0,cap:'y = 0 deleted → starts with 1'}],
+  ['<b>Case y has 0s and 1s</b> (y = 01, 10, 010, …): xz’s ending section of zeros is longer than 2 × the alternating part, so xz ∉ B.','Even-length y (01, 10): the 01-part loses copies but the 2p trailing zeros stay → too many zeros. Odd-length y (010…): the alternation itself breaks.',{a:0,k:2,i:0,cap:'y = 01 deleted → (01)³ but still 8 zeros'}],
+  ['All possible cases for y contradict (1). ∴ the hypothesis (B is regular) is false. ∴ B is non-regular. ∎','Say “all cases”, name the condition, conclude. Free marks.']]},
+ {id:'A',title:'ICA-4A: L = {110<sup>n−2</sup>1<sup>n</sup> | n ∈ ℤ⁺, n ≥ 2}',p:5,
+  pred:w=>{const m=w.match(/^11(0*)(1*)$/);return!!m&&m[2].length===m[1].length+2},s:p=>'11'+'0'.repeat(p-2)+'1'.repeat(p),
+  lines:[
+  ['Suppose L is regular. Then P.L.R.L. applies.','Same opening every time.'],
+  ['Let s = 110<sup>p−2</sup>1<sup>p</sup> with p ≥ 2, so s ∈ L. |s| = 2 + (p−2) + p = 2p ≥ p.','Plug n = p into the pattern. p ≥ 2 so the exponent p−2 isn’t negative.',{a:0,k:0,i:1,cap:'p = 5: 11 000 11111'}],
+  ['∴ s = xyz with (1) xy<sup>i</sup>z ∈ L ∀i ≥ 0, (2) |y| &gt; 0, (3) |xy| ≤ p.','Copy the promise.'],
+  ['Using (3), xy is in the 110<sup>p−2</sup> part of s, since |110<sup>p−2</sup>| = p.','The first p symbols are “11” + the 0s — two different letters → cases.'],
+  ['<b>If y = 1 or 11:</b> xy³z has at least three 1s before the 0s, so xy³z ∉ L.','Pump UP (i = 3): extra 1s at the front. L only allows exactly “11” there.',{a:0,k:1,i:3,cap:'y = 1, i = 3 → 1111 000…'}],
+  ['<b>If y is all 0s:</b> xy³z has too many 0s for its 1s (#1s must be #0s + 2), so ∉ L.','Adding 0s without adding 1s breaks the count link.',{a:2,k:2,i:3,cap:'y = 00, i = 3'}],
+  ['<b>If y = 1<sup>j</sup>0<sup>k</sup></b> (j ∈ {1,2}, k ≥ 1): xy³z has extra “10” sections before the 1s, so ∉ L.','y straddles the 1→0 boundary; repeating it creates 1s in the middle of the 0s.',{a:1,k:2,i:3,cap:'y = 10, i = 3 → 1 101010 0…'}],
+  ['All three cases contradict (1). ∴ L is non-regular. ∎','']]},
+ {id:'C',title:'ICA-4B: L = {01<sup>n</sup>0<sup>2n</sup> | n ≥ 0}',p:4,
+  pred:w=>{const m=w.match(/^0(1*)(0*)$/);return!!m&&m[2].length===2*m[1].length},s:p=>'0'+'1'.repeat(p)+'0'.repeat(2*p),
+  lines:[
+  ['Suppose L is regular. Then P.L.R.L. applies.',''],
+  ['Let s = 01<sup>p</sup>0<sup>2p</sup>, so s ∈ L. |s| = 1 + p + 2p = 3p + 1 &gt; p.','',{a:0,k:0,i:1,cap:'p = 4: 0 1111 00000000'}],
+  ['∴ s = xyz with (1) xy<sup>i</sup>z ∈ L ∀i ≥ 0, (2) |y| &gt; 0, (3) |xy| ≤ p.',''],
+  ['Using (3), xy is in the 01<sup>p−1</sup> part of s (that part has length p).','The leading 0 is inside the first p symbols, so y might include it → 2 cases.'],
+  ['<b>If y = 0 or y = 01<sup>j</sup></b> (y includes the first 0): xy<sup>0</sup>z begins with a 1, so ∉ L.','Every string in L starts with 0. Delete y (i = 0) and that 0 is gone.',{a:0,k:2,i:0,cap:'y = 01 deleted → starts with 1'}],
+  ['<b>If y is all 1s:</b> xy<sup>0</sup>z has fewer than p 1s but still 2p 0s, so the 1:2 ratio is lost, ∉ L.','Removing 1s but not 0s breaks “#0s = 2·#1s”.',{a:1,k:2,i:0,cap:'y = 11 deleted → 0 11 00000000'}],
+  ['Both cases contradict (1). ∴ L is non-regular. ∎','']]},
+ {id:'WW',title:'Harder: L = {ww | w ∈ {0,1}*} (a string written twice)',p:4,
+  pred:w=>w.length%2===0&&w.slice(0,w.length/2)===w.slice(w.length/2),s:p=>'0'.repeat(p)+'1'+'0'.repeat(p)+'1',
+  lines:[
+  ['Suppose L is regular. Then P.L.R.L. applies.',''],
+  ['Let s = 0<sup>p</sup>1 0<sup>p</sup>1 (w = 0<sup>p</sup>1), so s ∈ L. |s| = 2p + 2 ≥ p.','⚠️ Trap: s = 0<sup>p</sup>0<sup>p</sup> is also in L, but it PUMPS FINE (adding two 0s can keep it doubled). The 1s act as “walls” that pin the halves.',{a:0,k:0,i:1,cap:'p = 4: 00001 00001'}],
+  ['∴ s = xyz with (1) xy<sup>i</sup>z ∈ L ∀i ≥ 0, (2) |y| &gt; 0, (3) |xy| ≤ p.',''],
+  ['By (3), xy is inside the first p symbols, which are all 0s, so y = 0<sup>k</sup>, 1 ≤ k ≤ p.','Short method works — one case!'],
+  ['Pump i = 2: xy²z = 0<sup>p+k</sup>1 0<sup>p</sup>1. The 0-block before the first 1 is longer than the one before the second 1, so it can’t be any w written twice. ∴ ∉ L.','Each half of a ww string must have the same shape. Here the two “0-blocks then 1” pieces differ.',{a:0,k:1,i:2,cap:'k = 1, i = 2 → 00000 1 0000 1'}],
+  ['Contradicts (1). ∴ L is non-regular. ∎','']]},
+ {id:'PAL',title:'Harder: L = {w | w = w<sup>R</sup>} (palindromes over {0,1})',p:4,
+  pred:w=>w===[...w].reverse().join(''),s:p=>'0'.repeat(p)+'1'+'0'.repeat(p),
+  lines:[
+  ['Suppose L is regular. Then P.L.R.L. applies.',''],
+  ['Let s = 0<sup>p</sup>10<sup>p</sup>, a palindrome, so s ∈ L. |s| = 2p + 1 ≥ p.','⚠️ Trap: s = 0<sup>p</sup> is a palindrome too but pumps fine (0s stay a palindrome). The single 1 is the “mirror” that pumping can knock off-centre.',{a:0,k:0,i:1,cap:'p = 4: 0000 1 0000'}],
+  ['∴ s = xyz with (1), (2), (3).',''],
+  ['By (3), y = 0<sup>k</sup>, 1 ≤ k ≤ p (all in the left 0-block).','Short method again.'],
+  ['Pump i = 2: xy²z = 0<sup>p+k</sup>10<sup>p</sup>. Reversed it is 0<sup>p</sup>10<sup>p+k</sup> — different, so ∉ L.','The 1 is no longer in the middle.',{a:0,k:2,i:2,cap:'k = 2, i = 2 → 000000 1 0000'}],
+  ['Contradicts (1). ∴ L is non-regular. ∎','']]},
+];
+let hpI=0,hpN=1;
+const DECODER=`<div class="card"><h2>Decoder — the notation in plain English</h2>
+<table><tr><th>You see</th><th>Read it as</th><th>Meaning</th></tr>
+<tr><td class="mono">(1) xy<sup>i</sup>z ∈ B ∀i ∈ ℤ₀⁺</td><td>“x, then y repeated i times, then z, is in B — for every i = 0, 1, 2, 3, …”</td><td>The lemma’s big promise: <b>you can copy y as many times as you like, or delete it, and still be in B.</b> To break it you only need ONE i where it fails.</td></tr>
+<tr><td class="mono">∀</td><td>“for all / for every”</td><td>Every value, no exceptions.</td></tr>
+<tr><td class="mono">∈ / ∉</td><td>“is in” / “is not in”</td><td>Membership in the language.</td></tr>
+<tr><td class="mono">ℤ₀⁺</td><td>“non-negative whole numbers”</td><td>{0, 1, 2, 3, …}. (ℤ⁺ without the 0 = {1, 2, 3, …}.) So i = 0 is allowed — that’s pumping DOWN.</td></tr>
+<tr><td class="mono">y<sup>i</sup>, y<sup>0</sup></td><td>“y written i times”, “y zero times”</td><td>y² = yy, y³ = yyy, y⁰ = ε (nothing), so xy⁰z = xz.</td></tr>
+<tr><td class="mono">(2) |y| &gt; 0</td><td>“the length of y is more than 0”</td><td>y has at least one symbol — so pumping actually changes the string.</td></tr>
+<tr><td class="mono">(3) |xy| ≤ p</td><td>“x and y together are at most p long”</td><td>x and y both sit inside the <b>first p symbols</b> of s. This is what pins down what y can be.</td></tr>
+<tr><td class="mono">|s| ≥ p</td><td>“s is at least p long”</td><td>The lemma only promises a split for strings this long, so you must check it.</td></tr>
+<tr><td class="mono">(01)<sup>n</sup></td><td>“01 written n times”</td><td>0101…01 (2n symbols). Not the same as 0<sup>n</sup>1<sup>n</sup> = 00…011…1.</td></tr>
+<tr><td class="mono">∴ &nbsp; ∎</td><td>“therefore” &nbsp; “end of proof”</td><td></td></tr></table></div>`;
+function renderHard(){const H=HP[hpI],n=Math.min(hpN,H.lines.length);
+ const viz=v=>{const s=H.s(H.p),w=pump(s,v.a,v.k,v.i),ok=H.pred(w);return`<div class="hviz">${boxes(s,v.a,v.k,v.i,v.k?H.p:H.p,!v.k)}<div class="hcap">${v.cap}${v.k?` → ${ok?'<span class="ok">∈ L</span>':'<span class="no">∉ L ✓</span>'}`:''}</div></div>`};
+ return DECODER+`<div class="card"><h2>⑤ Harder proofs — handwritten style</h2>
+ <div class="row2">${HP.map((h,j)=>`<button class="${j===hpI?'on':''}" data-hp="${j}">${h.id==='B'?'Class example (01)ⁿ0²ⁿ':h.id==='A'?'ICA-4A':h.id==='C'?'ICA-4B':h.id==='WW'?'ww':'palindromes'}</button>`).join('')}</div>
+ <div class="paper"><div class="ptitle">Show that ${H.title.replace(/^[^:]*:\s*/,'').replace(/\s*\(.*\)$/,'')} is non-regular.</div>
+ ${H.lines.slice(0,n).map(([t,note,v],j)=>`<div class="pline"><div class="ink"><span class="ln">${j+1}</span>${t}${v?viz(v):''}</div><div class="red">${note?'← '+note:''}</div></div>`).join('')}</div>
+ <div style="display:flex;gap:8px;margin-top:10px">${n<H.lines.length?`<button class="on" id="hn">Next line (Space) · ${n}/${H.lines.length}</button><button id="ha">Show all</button>`:'<span class="ok"><b>✓ Proof complete</b> — now cover it and try writing it yourself.</span>'}<button id="hr">Restart</button></div></div>`}
+
 function render(){document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
- $('main').innerHTML=tab==='idea'?renderIdea():tab==='xyz'?renderXYZ():tab==='game'?renderGame():renderReg();
+ $('main').innerHTML=tab==='idea'?renderIdea():tab==='xyz'?renderXYZ():tab==='game'?renderGame():tab==='hard'?renderHard():renderReg();
  if(tab==='xyz')$('xl').onchange=e=>{xs=+e.target.value;xStep=1;render()};
  if(tab==='game'){$('lang').onchange=e=>{L=LANGS.find(x=>x.id===e.target.value);i=L.I??2;render()};
    for(const id of['p','a','k','i'])$(id).oninput=e=>{const v=+e.target.value;if(id==='p')p=v;if(id==='a')a=v;if(id==='k')k=v;if(id==='i')i=v;updateGame()}}
  if(tab==='reg'){$('dfa').onchange=e=>{dI=+e.target.value;dIn='';render()};$('win').onchange=e=>{dIn=e.target.value.replace(/[^01]/g,'');render()}}
- if(window.Tutor)Tutor.context=()=>tab==='xyz'?`Pumping visual, xyz→xyⁱz walkthrough: ${SX[xs].name.replace(/<[^>]+>/g,'')}, at step ${xStep}`+(xq&&xq.pickd!==null?`; practice i=${xq.i}`:''):tab==='game'?`Pumping visual: L = ${L.name.replace(/<[^>]+>/g,'')}, p=${p}, |x|=${a}, |y|=${k}, i=${i}, s=${L.s(p)}, pumped=${pump(L.s(p),a,k,i)} (${L.pred(pump(L.s(p),a,k,i))?'in L':'not in L'})`:tab==='reg'?`Pumping visual, regular DFA tab: ${DFAS[dI].name}`:'Pumping visual: short-method overview'}
+ if(window.Tutor)Tutor.context=()=>tab==='hard'?`Pumping visual, harder proof: ${HP[hpI].title.replace(/<[^>]+>/g,'')} — at line ${hpN}: ${HP[hpI].lines[Math.min(hpN,HP[hpI].lines.length)-1][0].replace(/<[^>]+>/g,'')}`:tab==='xyz'?`Pumping visual, xyz→xyⁱz walkthrough: ${SX[xs].name.replace(/<[^>]+>/g,'')}, at step ${xStep}`+(xq&&xq.pickd!==null?`; practice i=${xq.i}`:''):tab==='game'?`Pumping visual: L = ${L.name.replace(/<[^>]+>/g,'')}, p=${p}, |x|=${a}, |y|=${k}, i=${i}, s=${L.s(p)}, pumped=${pump(L.s(p),a,k,i)} (${L.pred(pump(L.s(p),a,k,i))?'in L':'not in L'})`:tab==='reg'?`Pumping visual, regular DFA tab: ${DFAS[dI].name}`:'Pumping visual: short-method overview'}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;return render()}
  const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.hp){hpI=+t.dataset.hp;hpN=1;return render()}if(t.id==='hn'){hpN++;return render()}if(t.id==='ha'){hpN=99;return render()}if(t.id==='hr'){hpN=1;return render()}
  if(t.id==='xn'){xStep++;render()}else if(t.id==='xa'){xStep=99;render()}else if(t.id==='xr'){xStep=1;render()}
  else if(t.id==='xnext'){xq=null;render()}else if(t.classList.contains('xo')&&xq.pickd===null){xq.pickd=+t.dataset.j;render()}});
-document.addEventListener('keydown',e=>{if(tab!=='xyz'||/INPUT|SELECT/.test(e.target.tagName))return;
+document.addEventListener('keydown',e=>{if(tab==='hard'&&e.key===' '&&!/INPUT|SELECT/.test(e.target.tagName)){e.preventDefault();const b=$('hn');if(b)b.click();return}if(tab!=='xyz'||/INPUT|SELECT/.test(e.target.tagName))return;
  if(e.key===' '){e.preventDefault();const b=$('xn');if(b)b.click()}else if(e.key==='Enter'){const b=$('xnext');if(b)b.click()}
  else if(/^[1-4]$/.test(e.key)&&xq&&xq.pickd===null){xq.pickd=+e.key-1;render()}});
 render();
