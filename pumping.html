@@ -28,7 +28,7 @@ svg.fa{color:#cfd3ff;display:block;margin:8px 0;max-width:100%;height:auto}svg.f
 @media(max-width:800px){.moves{grid-template-columns:1fr 1fr}}
 </style></head><body>
 <header><h1>🎈 Pumping Lemma — see it</h1>
-<button data-tab="idea">① The short method</button><button data-tab="game">② Break it (non-regular)</button><button data-tab="reg">③ Why regular ones survive</button><a href="index.html" style="margin-left:auto;color:var(--d);font-size:13px" id="other">← Test 2 practice site</a></header>
+<button data-tab="idea">① The short method</button><button data-tab="xyz">② xyz → xyⁱz step by step</button><button data-tab="game">③ Break it (non-regular)</button><button data-tab="reg">④ Why regular ones survive</button><a href="index.html" style="margin-left:auto;color:var(--d);font-size:13px" id="other">← Test 2 practice site</a></header>
 <main id="main"></main>
 <script src="core.js"></script>
 <script>
@@ -73,8 +73,8 @@ function renderIdea(){const s='0'.repeat(5)+'1'.repeat(5);
  <h3>The one thing to get right: choose s so the first p symbols are all the same letter.</h3>
  <ul><li>✅ 0<sup>p</sup>1<sup>p</sup>, a<sup>p</sup>ba<sup>p</sup>, 3<sup>p+1</sup>221<sup>p</sup>: first p symbols are one letter.</li><li>⚠️ 110<sup>p−2</sup>1<sup>p</sup> (ICA-4A): the prefix 11 is in the first p symbols → you’re back to cases.</li></ul></div>
  <div class="card"><h2>Regular vs non-regular — what pumping tells you</h2>
- <ul><li><b>Non-regular</b>: EVERY split allowed by (2)+(3) breaks for some i → contradiction → not regular. Try it in ②.</li>
- <li><b>Regular</b>: there is ALWAYS a split that survives every i — the DFA has a loop and y is that loop. See it in ③.</li>
+ <ul><li><b>Non-regular</b>: EVERY split allowed by (2)+(3) breaks for some i → contradiction → not regular. Try it in ③.</li>
+ <li><b>Regular</b>: there is ALWAYS a split that survives every i — the DFA has a loop and y is that loop. See it in ④.</li>
  <li>⚠️ Pumping can only prove <b>non</b>-regular. “It pumps” does NOT prove regular — the converse is false.</li></ul></div>`}
 
 function gameOut(){const s=L.s(p);a=Math.min(a,p-1);k=Math.max(1,Math.min(k,p-a));const w=pump(s,a,k,i),ok=L.pred(w);
@@ -92,7 +92,7 @@ function gameOut(){const s=L.s(p);a=Math.min(a,p-1);k=Math.max(1,Math.min(k,p-a)
  <div class="verdict ${ok?'ok':'no'}">${ok?'✓ still in L':'✗ not in L — broken! ('+L.rule+' fails)'}</div>`,proof,table:`<div class="card"><h2>Try every split the lemma could choose (p = ${p})</h2><div class="verdict">${verdict}</div>
  <table><tr><th>x</th><th>y</th><th>pump results</th><th></th></tr>${rows}</table>${total>40?`<div class="dim">…${total-40} more rows</div>`:''}</div>`}}
 function renderGame(){const o=gameOut();
- return`<div class="card"><h2>② Break it — you vs the lemma</h2>
+ return`<div class="card"><h2>③ Break it — you vs the lemma</h2>
  <div class="dim">You pick L and i. The lemma (adversary) picks p and the split — so you must beat <b>every</b> split it’s allowed to choose.</div>
  <div class="ctl"><label>Language</label><select id="lang">${LANGS.map(x=>`<option value="${x.id}" ${x===L?'selected':''}>${x.name.replace(/<sup>(.*?)<\/sup>/g,'^$1')}</option>`).join('')}</select><span></span>
  <label>p (lemma picks)</label><input type="range" id="p" min="2" max="9" value="${p}"><b>${p}</b>
@@ -113,7 +113,7 @@ function renderReg(){const D=DFAS[dI],m=D.m,n=Object.keys(m.states).length;let w
  const tooShort=w.length<n;
  const chips=path.map((q,ix)=>`${ix?`<span class="arr">—${w[ix-1]}→</span>`:''}<span class="st ${ix===J||ix===Lx?'rep':''}">${q}</span>`).join('');
  const pumps=J>=0?[0,1,2,3].map(I=>{const s2=pump(w,J,Lx-J,I),ok=faAccepts(m,s2);return`<tr><td>i=${I}</td><td>${boxes(w,J,Lx-J,I,0,false)}</td><td>${ok?'<span class="ok">✓ accepted</span>':'<span class="no">✗</span>'}</td></tr>`}).join(''):'';
- return`<div class="card"><h2>③ Why regular languages always survive pumping</h2>
+ return`<div class="card"><h2>④ Why regular languages always survive pumping</h2>
  <p>A DFA with p states reading a string of length ≥ p visits p+1 states → by the <b>pigeonhole principle</b> some state repeats within the first p steps. The symbols read between the two visits form a <b>loop</b>. That loop is y — going round it 0, 1, 2, 3 times ends in the same place, so it’s still accepted.</p>
  <div class="ctl"><label>DFA</label><select id="dfa">${DFAS.map((d,ix)=>`<option value="${ix}" ${ix===dI?'selected':''}>${d.name} (${Object.keys(d.m.states).length} states)</option>`).join('')}</select><span></span>
  <label>String s</label><input id="win" class="mono" value="${w}" style="background:#0d0d13;color:var(--t);border:1px solid #34344a;border-radius:8px;padding:6px 8px"><span></span></div>
@@ -123,12 +123,69 @@ function renderReg(){const D=DFAS[dI],m=D.m,n=Object.keys(m.states).length;let w
  <table style="margin-top:8px">${pumps}</table><div class="verdict ok">${acc?'Every pump lands in the same final state → accepted. That’s why you can never get a contradiction for a regular language.':''}</div>`:'<div class="dim">No repeat yet — make the string at least p long.</div>'}
  <h3>Contrast</h3><p>For {0<sup>n</sup>1<sup>n</sup>} there is no finite loop that works: going round a 0-loop adds 0s without adding 1s. A DFA would need a different state for every count of 0s — infinitely many. That’s what “non-regular” means.</p></div>`}
 
+// ───────── ④ xyz → xyⁱz, step by step ─────────
+const SX=[
+ {name:'{0<sup>n</sup>1<sup>n</sup>}',X:'0',mH:'p',m:p=>p,restH:' 1<sup>p</sup>',rest:p=>'1'.repeat(p),pred:LANGS[0].pred,rule:'#0s must equal #1s = p'},
+ {name:'{3<sup>n+1</sup>2<sup>2</sup>1<sup>n</sup>} (sample Q2)',X:'3',mH:'p+1',m:p=>p+1,restH:' 221<sup>p</sup>',rest:p=>'22'+'1'.repeat(p),pred:LANGS[5].pred,rule:'#3s must be #1s + 1 = p+1'},
+ {name:'{0<sup>n</sup>1<sup>m</sup> | n > m}',X:'0',mH:'p+1',m:p=>p+1,restH:' 1<sup>p</sup>',rest:p=>'1'.repeat(p),pred:LANGS[2].pred,rule:'#0s must be MORE than #1s = p'},
+ {name:'{0<sup>2n</sup>1<sup>n</sup>}',X:'0',mH:'2p',m:p=>2*p,restH:' 1<sup>p</sup>',rest:p=>'1'.repeat(p),pred:LANGS[3].pred,rule:'#0s must be exactly 2·#1s = 2p'},
+ {name:'{a<sup>n</sup>ba<sup>n</sup>}',X:'a',mH:'p',m:p=>p,restH:' ba<sup>p</sup>',rest:p=>'b'+'a'.repeat(p),pred:LANGS[4].pred,rule:'left a’s must equal right a’s = p'},
+];
+let xs=0,xStep=1,xq=null;
+const P=5,A=1,K=2; // demo numbers
+const sup2=(b,e)=>`${b}<sup>${e}</sup>`;
+const addI=(m,i)=>m+({0:'−k',1:'',2:'+k',3:'+2k'}[i]);
+function xyzSteps(){const S=SX[xs],X=S.X,s=X.repeat(S.m(P))+S.rest(P),zH=`${sup2(X,S.mH+'−a−k')}${S.restH}`;
+ const row=i=>{const w=pump(s,A,K,i),ok=S.pred(w);return`<tr><td><b>i = ${i}</b></td><td class="mono">x${'·y'.repeat(i)}·z</td><td>${sup2(X,addI(S.mH,i))}${S.restH}</td><td>${boxes(s,A,K,i,0,false)}</td><td>${i===1?'= s itself <span class="ok">∈ L</span> (useless)':ok?'<span class="ok">∈ L</span>':'<span class="no">∉ L ✓ breaks</span>'}</td></tr>`};
+ return[
+ `<h3>Step 1 — start with s</h3>s = ${sup2(X,S.mH)}${S.restH}. To SEE it, use p = ${P}: ${boxes(s,0,0,1,P,true)}<div class="dim">The yellow underline is the first p = ${P} symbols. They’re all ${X}s — that’s why we chose this s.</div>`,
+ `<h3>Step 2 — the lemma cuts s into x | y | z</h3>We don’t get to choose where. Say it picked |x| = ${A}, |y| = ${K}:${boxes(s,A,K,1,P,true)}${legend}
+  <div>x = <span class="mono">${s.slice(0,A)}</span>, y = <span class="mono">${s.slice(A,A+K)}</span>, z = <span class="mono">${s.slice(A+K)}</span>. All we really know: x and y sit under the underline (|xy| ≤ p) and y has at least one symbol (|y| ≥ 1).</div>`,
+ `<h3>Step 3 — write the pieces with letters, not numbers</h3>Since we don’t know the real cut, call |x| = a and |y| = k:
+  <div class="proof"><div>x = ${sup2(X,'a')}   y = ${sup2(X,'k')}   z = ${zH}</div></div>
+  <div class="dim">Why z = ${sup2(X,S.mH+'−a−k')}…? s starts with ${S.mH} ${X}s. x used a of them, y used k → ${S.mH}−a−k ${X}s are left for z, then the rest.<br>Check: a + k + (${S.mH}−a−k) = ${S.mH} ✓ — glued back together it’s s.</div>`,
+ `<h3>Step 4 — what “xy<sup>i</sup>z” means (do ONE first: i = 2)</h3>Write x, then y <b>i times</b>, then z. For i = 2: x · y · y · z
+  ${boxes(s,A,K,2,0,false)}<div class="mono">= ${s.slice(0,A)} · ${s.slice(A,A+K)} · ${s.slice(A,A+K)} · ${s.slice(A+K)} = ${pump(s,A,K,2)}</div>
+  <div class="dim">The dark-orange block is the extra copy of y. Everything else is unchanged.</div>`,
+ `<h3>Step 5 — same thing with letters (i = 2)</h3>
+  <div class="proof"><div>xy<sup>2</sup>z = ${sup2(X,'a')} · ${sup2(X,'k')} · ${sup2(X,'k')} · ${zH}</div>
+  <div>= ${sup2(X,`a + k + k + (${S.mH}−a−k)`)}${S.restH}<div class="why">Same letter side by side → ADD the exponents (like x²·x³ = x⁵).</div></div>
+  <div>= ${sup2(X,S.mH+'+k')}${S.restH}<div class="why">Simplify: a cancels with −a, one k cancels with −k. You never need to know a — that’s the magic.</div></div></div>
+  <div>Check with numbers (p=${P}, k=${K}): ${S.mH.replace('p',P).replace('2'+P,2*P)}+${K} = ${S.m(P)+K} ${X}s → <span class="mono">${pump(s,A,K,2)}</span> ✓</div>`,
+ `<h3>Step 6 — now ALL values of i at once</h3>Repeat y i times instead of 2:
+  <div class="proof"><div>xy<sup>i</sup>z = ${sup2(X,'a')} · (${sup2(X,'k')})<sup>i</sup> · ${zH} = ${sup2(X,`a + ik + ${S.mH} − a − k`)}${S.restH} = <b>${sup2(X,S.mH+' + (i−1)k')}${S.restH}</b><div class="why">(${sup2(X,'k')})<sup>i</sup> = ${sup2(X,'ik')}: i copies of k symbols. Then a cancels and you’re left with “original count + (i−1) extra y’s”.</div></div></div>
+  <div>Plug in each i (rule: ${S.rule}):</div><table>${[0,1,2,3].map(row).join('')}</table>`,
+ `<h3>Step 7 — pumping DOWN (i = 0) up close</h3>y<sup>0</sup> = ε, so xy<sup>0</sup>z = x·z — just delete y:${boxes(s,A,K,0,0,false)}
+  <div class="proof"><div>xy<sup>0</sup>z = ${sup2(X,'a')} · ${zH} = ${sup2(X,`a + ${S.mH} − a − k`)}${S.restH} = <b>${sup2(X,S.mH+'−k')}${S.restH}</b><div class="why">Removing y removes k ${X}s. Since k ≥ 1, the count definitely changed.</div></div></div>`,
+ `<h3>Step 8 — pick ONE i that breaks and write it</h3>You only need one. Pick whichever makes the rule fail most obviously (${S.rule}):
+  <div class="proof">${[0,2].filter(i=>!S.pred(pump(s,A,K,i))).map(i=>`<div>“Pump with i = ${i}: xy<sup>${i}</sup>z = ${sup2(X,addI(S.mH,i))}${S.restH}. Since k ≥ 1, ${i===0?'this has fewer':'this has more'} ${X}s than allowed (${S.rule}), so xy<sup>${i}</sup>z ∉ L — contradicting (1).”</div>`).join('')}</div>
+  ${S.pred(pump(s,A,K,2))?'<div class="dim">Notice i = 2 does NOT break this one (adding 0s keeps “more 0s”) — that’s why you pump DOWN here.</div>':''}`,
+ ]}
+function newXQ(){const S=pick(SX),i=pick([0,2,3]),right=`${sup2(S.X,addI(S.mH,i))}${S.restH}`;
+ const wrong=[`${sup2(S.X,S.mH+(i===0?'':'+'+(i===2?'2k':'3k')))}${S.restH}`,`${sup2(S.X,i===0?'0':i+'k')}${S.restH}`,`${sup2(S.X,addI(S.mH,i===0?2:0))}${S.restH}`,`${sup2(S.X,S.mH)}${S.restH}`].filter((w,j,arr)=>w!==right&&arr.indexOf(w)===j).slice(0,3);
+ const opts=shuffle([right,...wrong]);xq={S,i,opts,ans:opts.indexOf(right),pickd:null}}
+function renderXYZ(){const st=xyzSteps(),n=Math.min(xStep,st.length);if(!xq)newXQ();const q=xq;
+ return`<div class="card"><h2>② From xyz to xy<sup>i</sup>z — step by step</h2>
+ <div class="ctl"><label>Example language</label><select id="xl">${SX.map((S,j)=>`<option value="${j}" ${j===xs?'selected':''}>${S.name.replace(/<sup>(.*?)<\/sup>/g,'^$1')}</option>`).join('')}</select><span></span></div>
+ ${st.slice(0,n).map(x=>`<div class="card" style="background:#0003">${x}</div>`).join('')}
+ <div style="display:flex;gap:8px">${n<st.length?`<button class="on" id="xn">Next step (Space) · ${n}/${st.length}</button><button id="xa">Show all</button>`:'<span class="ok"><b>✓ Done — try the practice below</b></span>'}<button id="xr">Restart</button></div></div>
+ <div class="card"><h2>Practice: what is xy<sup>${q.i}</sup>z?</h2><div>L = ${q.S.name}, s = ${sup2(q.S.X,q.S.mH)}${q.S.restH}, and by |xy| ≤ p: x = ${sup2(q.S.X,'a')}, y = ${sup2(q.S.X,'k')}.</div>
+ <div style="display:grid;gap:6px;margin-top:10px">${q.opts.map((o,j)=>`<button class="xo" data-j="${j}" style="text-align:left;${q.pickd!==null?(j===q.ans?'border-color:var(--ok);background:#163a2a':j===q.pickd?'border-color:var(--no);background:#3a1a1e':''):''}">${j+1}. ${o}</button>`).join('')}</div>
+ ${q.pickd!==null?`<div class="proof" style="margin-top:10px"><div>xy<sup>${q.i}</sup>z = ${sup2(q.S.X,'a')}${q.i?' · '+Array(q.i).fill(sup2(q.S.X,'k')).join(' · '):''} · ${sup2(q.S.X,q.S.mH+'−a−k')}${q.S.restH} = ${sup2(q.S.X,`a ${q.i?'+ '+(q.i>1?q.i:'')+'k':''} + ${q.S.mH} − a − k`)}${q.S.restH} = <b>${sup2(q.S.X,addI(q.S.mH,q.i))}${q.S.restH}</b><div class="why">${q.i===0?'i = 0 deletes y: you lose k.':`i = ${q.i} has ${q.i} copies of y, but one copy was already in s — so you gain ${q.i-1===1?'':q.i-1}k extra. Common mistake: writing +${q.i}k.`} Rule: ${q.S.rule} → ${q.S.pred(pump(q.S.X.repeat(q.S.m(5))+q.S.rest(5),1,2,q.i))?'still in L — this i doesn’t break it, try another!':'∉ L, contradiction.'}</div></div></div><button class="on" id="xnext" style="margin-top:8px">Another (Enter)</button>`:''}</div>`}
+
 function render(){document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
- $('main').innerHTML=tab==='idea'?renderIdea():tab==='game'?renderGame():renderReg();
+ $('main').innerHTML=tab==='idea'?renderIdea():tab==='xyz'?renderXYZ():tab==='game'?renderGame():renderReg();
+ if(tab==='xyz')$('xl').onchange=e=>{xs=+e.target.value;xStep=1;render()};
  if(tab==='game'){$('lang').onchange=e=>{L=LANGS.find(x=>x.id===e.target.value);i=L.I??2;render()};
    for(const id of['p','a','k','i'])$(id).oninput=e=>{const v=+e.target.value;if(id==='p')p=v;if(id==='a')a=v;if(id==='k')k=v;if(id==='i')i=v;updateGame()}}
  if(tab==='reg'){$('dfa').onchange=e=>{dI=+e.target.value;dIn='';render()};$('win').onchange=e=>{dIn=e.target.value.replace(/[^01]/g,'');render()}}
- if(window.Tutor)Tutor.context=()=>tab==='game'?`Pumping visual: L = ${L.name.replace(/<[^>]+>/g,'')}, p=${p}, |x|=${a}, |y|=${k}, i=${i}, s=${L.s(p)}, pumped=${pump(L.s(p),a,k,i)} (${L.pred(pump(L.s(p),a,k,i))?'in L':'not in L'})`:tab==='reg'?`Pumping visual, regular DFA tab: ${DFAS[dI].name}`:'Pumping visual: short-method overview'}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;render()}});
+ if(window.Tutor)Tutor.context=()=>tab==='xyz'?`Pumping visual, xyz→xyⁱz walkthrough: ${SX[xs].name.replace(/<[^>]+>/g,'')}, at step ${xStep}`+(xq&&xq.pickd!==null?`; practice i=${xq.i}`:''):tab==='game'?`Pumping visual: L = ${L.name.replace(/<[^>]+>/g,'')}, p=${p}, |x|=${a}, |y|=${k}, i=${i}, s=${L.s(p)}, pumped=${pump(L.s(p),a,k,i)} (${L.pred(pump(L.s(p),a,k,i))?'in L':'not in L'})`:tab==='reg'?`Pumping visual, regular DFA tab: ${DFAS[dI].name}`:'Pumping visual: short-method overview'}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;return render()}
+ const t=e.target.closest('button');if(!t)return;
+ if(t.id==='xn'){xStep++;render()}else if(t.id==='xa'){xStep=99;render()}else if(t.id==='xr'){xStep=1;render()}
+ else if(t.id==='xnext'){xq=null;render()}else if(t.classList.contains('xo')&&xq.pickd===null){xq.pickd=+t.dataset.j;render()}});
+document.addEventListener('keydown',e=>{if(tab!=='xyz'||/INPUT|SELECT/.test(e.target.tagName))return;
+ if(e.key===' '){e.preventDefault();const b=$('xn');if(b)b.click()}else if(e.key==='Enter'){const b=$('xnext');if(b)b.click()}
+ else if(/^[1-4]$/.test(e.key)&&xq&&xq.pickd===null){xq.pickd=+e.key-1;render()}});
 render();
 </script></body></html>
