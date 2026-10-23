@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pumping Lemma — Visual</title>
+<style>
+:root{--bg:#121218;--p:#1b1b24;--p2:#242431;--t:#e9e9f2;--d:#9a9ab0;--a:#7c7cff;--ok:#3ecf8e;--no:#ff6b6b;--x:#4c8dff;--y:#ff9f43;--z:#5d6275}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:15px/1.55 system-ui,-apple-system,sans-serif}
+header{display:flex;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid #2a2a38;position:sticky;top:0;background:var(--bg);z-index:5;flex-wrap:wrap}
+header h1{font-size:16px;margin:0 12px 0 0}button,select{font:inherit;color:var(--t);background:var(--p2);border:1px solid #34344a;border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--a)}button.on{background:var(--a);border-color:var(--a);color:#fff}
+main{padding:18px 26px;max-width:1100px;margin:0 auto}
+.card{background:var(--p);border:1px solid #2a2a38;border-radius:12px;padding:16px 20px;margin-bottom:14px}
+h2{margin:0 0 8px;font-size:19px}h3{margin:12px 0 6px;font-size:15px;color:#ffd166}.dim{color:var(--d);font-size:13px}
+.str{display:flex;flex-wrap:wrap;gap:3px;margin:22px 0 14px;align-items:flex-end;row-gap:24px}
+.c{width:30px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;font:600 16px ui-monospace,Menlo,monospace;position:relative}
+.c.x{background:var(--x)}.c.y{background:var(--y);color:#1a1a1a}.c.y2{background:#c97a2f;color:#1a1a1a}.c.z{background:var(--z)}.c.ghost{background:transparent;border:2px dashed var(--y);color:var(--y);opacity:.6;text-decoration:line-through}
+.c .ix{position:absolute;top:-17px;font:10px system-ui;color:var(--d)}
+.c.inp::after{content:'';position:absolute;bottom:-8px;left:-2px;right:-2px;height:4px;background:#ffd166}
+.legend{margin-top:4px}.legend span{display:inline-block;padding:1px 9px;border-radius:5px;margin-right:6px;font-size:12px;font-weight:700;color:#fff}
+.ctl{display:grid;grid-template-columns:150px 1fr 60px;gap:6px 12px;align-items:center;margin:10px 0}input[type=range]{width:100%}
+.verdict{font-size:18px;font-weight:700;margin-top:8px}.ok{color:var(--ok)}.no{color:var(--no)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}td,th{border-bottom:1px solid #2a2a38;padding:5px 8px;text-align:left}th{color:var(--d);font-weight:500}
+.mono{font-family:ui-monospace,Menlo,monospace}
+.moves{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.move{background:#0004;border:1px solid #2e2e40;border-radius:10px;padding:10px}.move b{color:#ffd166}
+.proof div{margin:6px 0;padding:7px 10px;background:#0004;border-radius:8px}.proof .why{color:#ffe3a3;font-size:13px;margin-top:3px}
+.path{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:8px 0}.st{padding:3px 8px;border-radius:12px;background:#2c2c40;font:13px ui-monospace,Menlo,monospace}.st.rep{background:var(--y);color:#1a1a1a;font-weight:700}
+.arr{color:var(--d);font-size:12px}
+svg.fa{color:#cfd3ff;display:block;margin:8px 0;max-width:100%;height:auto}svg.fa .st{fill:#1f2340;stroke:currentColor}svg.fa text{fill:currentColor;font:13px system-ui}
+@media(max-width:800px){.moves{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<header><h1>🎈 Pumping Lemma — see it</h1>
+<button data-tab="idea">① The short method</button><button data-tab="game">② Break it (non-regular)</button><button data-tab="reg">③ Why regular ones survive</button><a href="index.html" style="margin-left:auto;color:var(--d);font-size:13px" id="other">← Test 2 practice site</a></header>
+<main id="main"></main>
+<script src="core.js"></script>
+<script>
+const cnt=(w,c)=>w.split(c).length-1;
+// X = the letter filling the first p symbols of s; I = the pump that breaks it (short method)
+const LANGS=[
+ {id:'0n1n',name:'{0<sup>n</sup>1<sup>n</sup> | n ≥ 0}',reg:false,pred:w=>/^0*1*$/.test(w)&&cnt(w,'0')===cnt(w,'1'),s:p=>'0'.repeat(p)+'1'.repeat(p),sH:'0<sup>p</sup>1<sup>p</sup>',len:'2p',X:'0',I:2,res:'0<sup>p+k</sup>1<sup>p</sup>',why:'more 0s than 1s',rule:'#0s = #1s'},
+ {id:'mgn',name:'{0<sup>n</sup>1<sup>m</sup> | m > n}',reg:false,pred:w=>/^0*1*$/.test(w)&&cnt(w,'1')>cnt(w,'0'),s:p=>'0'.repeat(p)+'1'.repeat(p+1),sH:'0<sup>p</sup>1<sup>p+1</sup>',len:'2p+1',X:'0',I:2,res:'0<sup>p+k</sup>1<sup>p+1</sup>',why:'#0s = p+k ≥ p+1 = #1s, so not more 1s',rule:'more 1s than 0s'},
+ {id:'ngm',name:'{0<sup>n</sup>1<sup>m</sup> | n > m}',reg:false,pred:w=>/^0*1*$/.test(w)&&cnt(w,'0')>cnt(w,'1'),s:p=>'0'.repeat(p+1)+'1'.repeat(p),sH:'0<sup>p+1</sup>1<sup>p</sup>',len:'2p+1',X:'0',I:0,res:'0<sup>p+1−k</sup>1<sup>p</sup>',why:'#0s = p+1−k ≤ p = #1s, so not more 0s (pumping UP stays in L — you must pump DOWN)',rule:'more 0s than 1s'},
+ {id:'2n',name:'{0<sup>2n</sup>1<sup>n</sup> | n ≥ 0}',reg:false,pred:w=>/^0*1*$/.test(w)&&cnt(w,'0')===2*cnt(w,'1'),s:p=>'0'.repeat(2*p)+'1'.repeat(p),sH:'0<sup>2p</sup>1<sup>p</sup>',len:'3p',X:'0',I:0,res:'0<sup>2p−k</sup>1<sup>p</sup>',why:'#0s = 2p−k ≠ 2p = 2·#1s',rule:'#0s = 2·#1s'},
+ {id:'aba',name:'{a<sup>n</sup>ba<sup>n</sup> | n ≥ 0}',reg:false,pred:w=>{const m=w.match(/^(a*)b(a*)$/);return!!m&&m[1].length===m[2].length},s:p=>'a'.repeat(p)+'b'+'a'.repeat(p),sH:'a<sup>p</sup>ba<sup>p</sup>',len:'2p+1',X:'a',I:2,res:'a<sup>p+k</sup>ba<sup>p</sup>',why:'the two a-blocks are no longer equal',rule:'same # of a’s on both sides of b'},
+ {id:'sample',name:'{3<sup>n+1</sup>2<sup>2</sup>1<sup>n</sup> | n ≥ 0} (sample Q2)',reg:false,pred:w=>{const m=w.match(/^(3*)22(1*)$/);return!!m&&m[1].length===m[2].length+1},s:p=>'3'.repeat(p+1)+'22'+'1'.repeat(p),sH:'3<sup>p+1</sup>221<sup>p</sup>',len:'2p+3',X:'3',I:0,res:'3<sup>p+1−k</sup>221<sup>p</sup>',why:'#3s must be #1s + 1 = p+1, but it is p+1−k',rule:'#3s = #1s + 1, with 22 in the middle'},
+ {id:'r0s1s',name:'0*1* (regular)',reg:true,pred:w=>/^0*1*$/.test(w),s:p=>'0'.repeat(p)+'1'.repeat(p),sH:'0<sup>p</sup>1<sup>p</sup>',rule:'0s then 1s, any amounts'},
+ {id:'r01',name:'(01)* (regular)',reg:true,pred:w=>/^(01)*$/.test(w),s:p=>'01'.repeat(p),sH:'(01)<sup>p</sup>',rule:'repeated 01 blocks'},
+ {id:'reven',name:'{w | even number of 0s} (regular)',reg:true,pred:w=>cnt(w,'0')%2===0,s:p=>'0'.repeat(2*p),sH:'0<sup>2p</sup>',rule:'#0s is even'},
+];
+const DFAS=[
+ {name:'0*1*',lang:'r0s1s',m:{states:{A:[70,90],B:[230,90],D:[390,90]},start:'A',accept:['A','B'],edges:[['A','A','0'],['A','B','1'],['B','B','1'],['B','D','0'],['D','D','0,1']]}},
+ {name:'even number of 0s',lang:'reven',m:{states:{E:[70,100],O:[250,100]},start:'E',accept:['E'],edges:[['E','E','1'],['E','O','0'],['O','E','0'],['O','O','1']]}},
+ {name:'contains 11',lang:null,m:{states:{q0:[70,100],q1:[220,100],q2:[370,100]},start:'q0',accept:['q2'],edges:[['q0','q0','0'],['q0','q1','1'],['q1','q0','0'],['q1','q2','1'],['q2','q2','0,1']]}},
+];
+let tab='idea',L=LANGS[0],p=5,a=0,k=1,i=2,dI=0,dIn='';
+const $=id=>document.getElementById(id);
+const pump=(s,a,k,i)=>s.slice(0,a)+s.slice(a,a+k).repeat(i)+s.slice(a+k);
+function boxes(s,a,k,i,p,showIdx){let h='';const x=s.slice(0,a),y=s.slice(a,a+k),z=s.slice(a+k);let n=0;
+  const c=(ch,cls)=>`<div class="c ${cls}${n<p&&showIdx!==false?' inp':''}">${showIdx?`<span class="ix">${n+1}</span>`:''}${ch}</div>`;
+  for(const ch of x){h+=c(ch,'x');n++}
+  if(i===0)for(const ch of y)h+=`<div class="c ghost">${ch}</div>`;
+  for(let r=0;r<i;r++)for(const ch of y){h+=c(ch,r%2?'y2':'y');n++}
+  for(const ch of z){h+=c(ch,'z');n++}return`<div class="str">${h}</div>`}
+const legend='<div class="legend dim"><span style="background:var(--x)">x</span><span style="background:var(--y);color:#1a1a1a">y</span><span style="background:var(--z)">z</span> <span style="background:transparent;color:#ffd166;border-bottom:4px solid #ffd166;border-radius:0;padding:0 10px"></span> = the first p symbols (where xy must live)</div>';
+
+function renderIdea(){const s='0'.repeat(5)+'1'.repeat(5);
+ return`<div class="card"><h2>The short method (“Proof B”) in 4 moves</h2><div class="dim">Shown with p = 5 so you can see it. In your proof, keep p as a letter.</div>
+ <div class="moves">
+  <div class="move"><b>1. Assume regular</b><br>Then the lemma hands you a pumping length p and promises: every s ∈ L with |s| ≥ p splits as xyz with (1) xyⁱz ∈ L ∀i, (2) |y|&gt;0, (3) |xy| ≤ p.</div>
+  <div class="move"><b>2. Pick s with p copies of ONE letter first</b><br>s = 0<sup>p</sup>1<sup>p</sup>. It’s in L, and |s| = 2p ≥ p.${boxes(s,0,0,1,5)}</div>
+  <div class="move"><b>3. |xy| ≤ p traps y</b><br>x and y fit inside the yellow-underlined first p symbols — all 0s. So y = 0<sup>k</sup>. ONE case.${boxes(s,1,2,1,5)}</div>
+  <div class="move"><b>4. Pump & break the rule</b><br>i = 2 adds k extra 0s: 0<sup>p+k</sup>1<sup>p</sup> has more 0s than 1s ∉ L. Contradiction.${boxes(s,1,2,2,5)}</div></div></div>
+ <div class="card"><h2>Why “short”?</h2><p>The long method (“Proof A”) splits into 3 cases: y all 0s, y all 1s, y mixed. Condition (3) makes the last two impossible, because y can’t reach the 1s:</p>
+ ${boxes(s,0,0,1,5)}<p class="dim">Every possible y lives in the underlined part → y is only 0s → only one case to write.</p>
+ <h3>The one thing to get right: choose s so the first p symbols are all the same letter.</h3>
+ <ul><li>✅ 0<sup>p</sup>1<sup>p</sup>, a<sup>p</sup>ba<sup>p</sup>, 3<sup>p+1</sup>221<sup>p</sup>: first p symbols are one letter.</li><li>⚠️ 110<sup>p−2</sup>1<sup>p</sup> (ICA-4A): the prefix 11 is in the first p symbols → you’re back to cases.</li></ul></div>
+ <div class="card"><h2>Regular vs non-regular — what pumping tells you</h2>
+ <ul><li><b>Non-regular</b>: EVERY split allowed by (2)+(3) breaks for some i → contradiction → not regular. Try it in ②.</li>
+ <li><b>Regular</b>: there is ALWAYS a split that survives every i — the DFA has a loop and y is that loop. See it in ③.</li>
+ <li>⚠️ Pumping can only prove <b>non</b>-regular. “It pumps” does NOT prove regular — the converse is false.</li></ul></div>`}
+
+function gameOut(){const s=L.s(p);a=Math.min(a,p-1);k=Math.max(1,Math.min(k,p-a));const w=pump(s,a,k,i),ok=L.pred(w);
+ let rows='',broken=0,total=0,survivor=null;
+ for(let A=0;A<p;A++)for(let K=1;A+K<=p;K++){total++;const r=[0,1,2,3].map(I=>L.pred(pump(s,A,K,I)));const br=r.includes(false);if(br)broken++;else if(!survivor)survivor=[A,K];
+   if(total<=40)rows+=`<tr><td class="mono">${s.slice(0,A)||'ε'}</td><td class="mono">${s.slice(A,A+K)}</td><td>${r.map((v,I)=>`i=${I} ${v?'<span class="ok">✓</span>':'<span class="no">✗</span>'}`).join(' · ')}</td><td>${br?'<span class="no">breaks</span>':'<span class="ok">survives all i</span>'}</td></tr>`}
+ const verdict=broken===total?`<span class="no">All ${total} allowed splits break → L can’t be pumped → <u>not regular</u>.</span>`:`<span class="ok">Split x = ${s.slice(0,survivor[0])||'ε'}, y = ${s.slice(survivor[0],survivor[0]+survivor[1])} survives every i → no contradiction. (Consistent with L being regular.)</span>`;
+ const proof=L.reg?'':`<div class="card proof"><h2>Write it like this (short method)</h2>
+  <div>Assume, for contradiction, that L is regular. Then the P.L.R.L. applies with pumping length p.<div class="why">Move 1.</div></div>
+  <div>Let s = ${L.sH}. Then s ∈ L and |s| = ${L.len} ≥ p.<div class="why">Move 2 — first p symbols are all ${L.X}s (see the underline above).</div></div>
+  <div>By (3) |xy| ≤ p, so xy is inside the first p symbols, which are all ${L.X}s. By (2), y = ${L.X}<sup>k</sup> with 1 ≤ k ≤ p.<div class="why">Move 3 — one case only.</div></div>
+  <div>Pump with i = ${L.I}: xy<sup>${L.I}</sup>z = ${L.res}. But ${L.why}, so xy<sup>${L.I}</sup>z ∉ L, contradicting (1). ∴ L is not regular. ∎<div class="why">Move 4 — try i = ${L.I} on the slider above to watch it break.</div></div></div>`;
+ return{top:`<div class="dim">L = ${L.name} — rule: ${L.rule}. s = ${L.sH} = </div>${boxes(s,a,k,1,p,true)}${legend}
+ <h3>Pumped: xy<sup>${i}</sup>z ${i===0?'(y removed)':i===1?'(= s)':`(y repeated ${i}×)`}</h3>${boxes(s,a,k,i,p,false)}
+ <div class="verdict ${ok?'ok':'no'}">${ok?'✓ still in L':'✗ not in L — broken! ('+L.rule+' fails)'}</div>`,proof,table:`<div class="card"><h2>Try every split the lemma could choose (p = ${p})</h2><div class="verdict">${verdict}</div>
+ <table><tr><th>x</th><th>y</th><th>pump results</th><th></th></tr>${rows}</table>${total>40?`<div class="dim">…${total-40} more rows</div>`:''}</div>`}}
+function renderGame(){const o=gameOut();
+ return`<div class="card"><h2>② Break it — you vs the lemma</h2>
+ <div class="dim">You pick L and i. The lemma (adversary) picks p and the split — so you must beat <b>every</b> split it’s allowed to choose.</div>
+ <div class="ctl"><label>Language</label><select id="lang">${LANGS.map(x=>`<option value="${x.id}" ${x===L?'selected':''}>${x.name.replace(/<sup>(.*?)<\/sup>/g,'^$1')}</option>`).join('')}</select><span></span>
+ <label>p (lemma picks)</label><input type="range" id="p" min="2" max="9" value="${p}"><b>${p}</b>
+ <label>|x| (lemma picks)</label><input type="range" id="a" min="0" max="${p-1}" value="${a}"><b>${a}</b>
+ <label>|y| = k (lemma picks)</label><input type="range" id="k" min="1" max="${p-a}" value="${k}"><b>${k}</b>
+ <label>i (YOU pick)</label><input type="range" id="i" min="0" max="3" value="${i}"><b>${i}</b></div>
+ <div id="gtop">${o.top}</div><div class="dim">The sliders can’t make |xy| &gt; p or |y| = 0 — those are conditions (2) and (3).</div></div>
+ ${o.proof}<div id="gtab">${o.table}</div>`}
+function updateGame(){$('a').max=p-1;a=Math.min(a,p-1);$('k').max=p-a;k=Math.max(1,Math.min(k,p-a));$('k').value=k;
+ for(const id of['p','a','k','i'])$(id).nextElementSibling.textContent={p,a,k,i}[id];const o=gameOut();$('gtop').innerHTML=o.top;$('gtab').innerHTML=o.table}
+
+function renderReg(){const D=DFAS[dI],m=D.m,n=Object.keys(m.states).length;let w=dIn||'0'.repeat(n)+'11'.slice(0,D.name==='contains 11'?2:0);
+ if(D.name==='0*1*'&&!dIn)w='0'.repeat(n)+'1';if(D.name==='even number of 0s'&&!dIn)w='0110';
+ const step=(q,c)=>m.edges.find(([f,,l])=>f===q&&l.split(',').includes(c))?.[1];
+ const path=[m.start];for(const c of w){const q=step(path[path.length-1],c);if(!q)break;path.push(q)}
+ const acc=m.accept.includes(path[path.length-1]);let J=-1,Lx=-1;
+ outer:for(let l=1;l<path.length&&l<=n;l++)for(let j=0;j<l;j++)if(path[j]===path[l]){J=j;Lx=l;break outer}
+ const tooShort=w.length<n;
+ const chips=path.map((q,ix)=>`${ix?`<span class="arr">—${w[ix-1]}→</span>`:''}<span class="st ${ix===J||ix===Lx?'rep':''}">${q}</span>`).join('');
+ const pumps=J>=0?[0,1,2,3].map(I=>{const s2=pump(w,J,Lx-J,I),ok=faAccepts(m,s2);return`<tr><td>i=${I}</td><td>${boxes(w,J,Lx-J,I,0,false)}</td><td>${ok?'<span class="ok">✓ accepted</span>':'<span class="no">✗</span>'}</td></tr>`}).join(''):'';
+ return`<div class="card"><h2>③ Why regular languages always survive pumping</h2>
+ <p>A DFA with p states reading a string of length ≥ p visits p+1 states → by the <b>pigeonhole principle</b> some state repeats within the first p steps. The symbols read between the two visits form a <b>loop</b>. That loop is y — going round it 0, 1, 2, 3 times ends in the same place, so it’s still accepted.</p>
+ <div class="ctl"><label>DFA</label><select id="dfa">${DFAS.map((d,ix)=>`<option value="${ix}" ${ix===dI?'selected':''}>${d.name} (${Object.keys(d.m.states).length} states)</option>`).join('')}</select><span></span>
+ <label>String s</label><input id="win" class="mono" value="${w}" style="background:#0d0d13;color:var(--t);border:1px solid #34344a;border-radius:8px;padding:6px 8px"><span></span></div>
+ ${drawFA(m)}<div class="dim">p = number of states = ${n}. s ${acc?'is accepted ✓':'is NOT accepted — pick an accepted string'}${tooShort?` · needs |s| ≥ ${n}`:''}.</div>
+ <h3>States visited</h3><div class="path">${chips}</div>
+ ${J>=0?`<div>State <b>${path[J]}</b> repeats (steps ${J} and ${Lx}, both ≤ p = ${n}) → x = <span class="mono">${w.slice(0,J)||'ε'}</span>, y = <span class="mono">${w.slice(J,Lx)}</span> (the loop), z = <span class="mono">${w.slice(Lx)||'ε'}</span>. |xy| = ${Lx} ≤ ${n} ✓, |y| = ${Lx-J} &gt; 0 ✓</div>
+ <table style="margin-top:8px">${pumps}</table><div class="verdict ok">${acc?'Every pump lands in the same final state → accepted. That’s why you can never get a contradiction for a regular language.':''}</div>`:'<div class="dim">No repeat yet — make the string at least p long.</div>'}
+ <h3>Contrast</h3><p>For {0<sup>n</sup>1<sup>n</sup>} there is no finite loop that works: going round a 0-loop adds 0s without adding 1s. A DFA would need a different state for every count of 0s — infinitely many. That’s what “non-regular” means.</p></div>`}
+
+function render(){document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+ $('main').innerHTML=tab==='idea'?renderIdea():tab==='game'?renderGame():renderReg();
+ if(tab==='game'){$('lang').onchange=e=>{L=LANGS.find(x=>x.id===e.target.value);i=L.I??2;render()};
+   for(const id of['p','a','k','i'])$(id).oninput=e=>{const v=+e.target.value;if(id==='p')p=v;if(id==='a')a=v;if(id==='k')k=v;if(id==='i')i=v;updateGame()}}
+ if(tab==='reg'){$('dfa').onchange=e=>{dI=+e.target.value;dIn='';render()};$('win').onchange=e=>{dIn=e.target.value.replace(/[^01]/g,'');render()}}
+ if(window.Tutor)Tutor.context=()=>tab==='game'?`Pumping visual: L = ${L.name.replace(/<[^>]+>/g,'')}, p=${p}, |x|=${a}, |y|=${k}, i=${i}, s=${L.s(p)}, pumped=${pump(L.s(p),a,k,i)} (${L.pred(pump(L.s(p),a,k,i))?'in L':'not in L'})`:tab==='reg'?`Pumping visual, regular DFA tab: ${DFAS[dI].name}`:'Pumping visual: short-method overview'}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;render()}});
+render();
+</script></body></html>
